@@ -213,26 +213,20 @@
     const legendListEl = document.getElementById('route-legend-list');
     const legendTitleEl = document.querySelector('.route-legend-title');
     if (legendEl && legendListEl) {
-      if (routes.length === 0) {
+      if (sources.length === 0) {
         legendEl.hidden = true;
       } else {
         legendEl.hidden = false;
-        if (legendTitleEl) legendTitleEl.textContent = 'Top routes';
-        const totalRoute = routes.reduce((s, d) => s + (d.count || 0), 0) || 1;
-        legendListEl.innerHTML = routes.slice(0, 14).map(r => {
-          const color = originColor(r.sourceCountry);
-          const pct = ((r.count / totalRoute) * 100).toFixed(r.count / totalRoute >= 0.1 ? 0 : 1);
-          const source = escapeHtml(r.sourceCountry);
-          const destination = escapeHtml(r.destinationCountry);
-          const label = `${countryLabel(r.sourceCountry)} → ${countryLabel(r.destinationCountry)}`;
+        if (legendTitleEl) legendTitleEl.textContent = 'Origin countries';
+        const totalSrc = sources.reduce((s, d) => s + (d.count || 0), 0) || 1;
+        legendListEl.innerHTML = sources.slice(0, 14).map(s => {
+          const color = originColor(s.country);
+          const pct = ((s.count / totalSrc) * 100).toFixed(s.count / totalSrc >= 0.1 ? 0 : 1);
+          const label = countryLabel(s.country);
           return `<div class="route-legend-item" title="${escapeHtml(label)}">
-            <span class="route-legend-icons">
-              <svg class="route-legend-pin" width="11" height="13" viewBox="0 0 20 24" aria-hidden="true" style="color:${color}"><path d="M10 23 C10 23 0 15 0 8 A10 10 0 1 1 20 8 C20 15 10 23 10 23 Z" fill="currentColor"/><circle cx="10" cy="8" r="3.2" fill="white"/></svg>
-              <span class="route-legend-dash"></span>
-              <span class="route-legend-bubble"></span>
-            </span>
-            <span class="route-legend-pair">${source}-${destination}</span>
-            <span class="route-legend-count">${formatNumber(r.count)} (${pct}%)</span>
+            <span class="route-legend-swatch" style="background:${color}"></span>
+            <span class="route-legend-pair">${escapeHtml(s.country)} · ${escapeHtml(label)}</span>
+            <span class="route-legend-count">${formatNumber(s.count)} (${pct}%)</span>
           </div>`;
         }).join('');
       }
