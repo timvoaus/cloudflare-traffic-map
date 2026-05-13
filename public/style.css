@@ -396,7 +396,7 @@ html[data-theme="light"] .origin-pin .origin-pin-body {
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.35);
   backdrop-filter: blur(6px);
-  max-width: 240px;
+  max-width: 280px;
   font-size: 12px;
   line-height: 1.35;
   pointer-events: auto;
@@ -418,16 +418,34 @@ html[data-theme="light"] .origin-pin .origin-pin-body {
 .route-legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   white-space: nowrap;
 }
-.route-legend-swatch {
-  width: 12px;
-  height: 3px;
-  border-radius: 2px;
+.route-legend-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex-shrink: 0;
 }
-.route-legend-pair { flex: 1; }
+.route-legend-pin {
+  display: block;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+.route-legend-dash {
+  width: 7px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  opacity: 0.7;
+}
+.route-legend-bubble {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 5px var(--blue);
+}
+.route-legend-pair { flex: 1; font-weight: 700; }
 .route-legend-count { opacity: 0.65; font-variant-numeric: tabular-nums; }
 html[data-theme="light"] .route-legend {
   background: rgba(255,255,255,0.92);
@@ -435,4 +453,3 @@ html[data-theme="light"] .route-legend {
   border-color: rgba(0,0,0,0.08);
 }
 
-.legend-pin { color: var(--accent); display: inline-block; vertical-align: middle; margin-right: 2px; }
