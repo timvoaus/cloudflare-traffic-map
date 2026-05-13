@@ -1,0 +1,19 @@
+name = "traffic-map-refresh"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# Cron: every 5 minutes
+[triggers]
+crons = ["*/5 * * * *"]
+
+# Same D1 database that Pages reads from
+[[d1_databases]]
+binding = "DB"
+database_name = "traffic-map-db"
+database_id = "5554e20a-27d5-46ed-aee2-f5968053d5f1"
+
+[vars]
+# Window to aggregate (hours). Cloudflare free plan only retains gateway
+# activity logs for 24 h, so this is also the maximum useful value.
+# The Worker hard-caps this to 24 in code.
+WINDOW_HOURS = "24"

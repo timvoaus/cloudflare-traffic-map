@@ -1,0 +1,16 @@
+{
+  "name": "cloudflare-traffic-map",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone Traffic Destination Map running on Cloudflare Pages + Worker (Pages Functions) + D1.",
+  "scripts": {
+    "dev": "wrangler pages dev public --d1=DB=traffic-map-db",
+    "d1:create": "wrangler d1 create traffic-map-db",
+    "d1:seed:local": "wrangler d1 execute traffic-map-db --local --file=schema.sql",
+    "d1:seed:remote": "wrangler d1 execute traffic-map-db --remote --file=schema.sql",
+    "deploy": "wrangler pages deploy public --project-name=cloudflare-traffic-map"
+  },
+  "devDependencies": {
+    "wrangler": "^4.90.1"
+  }
+}

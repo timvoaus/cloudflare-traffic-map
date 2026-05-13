@@ -1,0 +1,10 @@
+name = "cloudflare-traffic-map"
+compatibility_date = "2024-11-01"
+pages_build_output_dir = "public"
+
+# D1 database binding. The `database_id` is filled in automatically by the
+# deploy script (`npm run deploy`) after `wrangler d1 create` runs.
+[[d1_databases]]
+binding = "DB"
+database_name = "traffic-map-db"
+database_id = "5554e20a-27d5-46ed-aee2-f5968053d5f1"
