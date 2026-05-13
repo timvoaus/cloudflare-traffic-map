@@ -1,5 +1,7 @@
 # Cloudflare Traffic Destination Map
 
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/timvoaus/cloudflare-traffic-map)
+
 Standalone version of the **traffic destination map** extracted from the
 Zero‑Trust Gateway dashboard. It runs entirely on the Cloudflare edge:
 
@@ -26,6 +28,14 @@ curved arcs between origin and destination countries.
 - Node.js 18+
 - A Cloudflare account
 - `npx wrangler login` will open a browser to authenticate.
+
+## One-click deploy
+
+Click the **Deploy to Cloudflare** button above to clone this repository into
+your Cloudflare account and create the Pages project.
+
+After deployment, create or select a D1 database named `traffic-map-db`, apply
+`schema.sql`, and ensure the Pages Function has a D1 binding named `DB`.
 
 ## One-shot deploy
 
