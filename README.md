@@ -2,12 +2,13 @@
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/timvoaus/cloudflare-traffic-map)
 
-Standalone version of the **traffic destination map** extracted from the
-Zero‑Trust Gateway dashboard. It runs entirely on the Cloudflare edge:
+This project shows your Cloudflare Zero Trust traffic on a world map.
 
-- **Pages** serves the static UI (`public/`).
-- **Pages Functions (Workers)** expose `/api/traffic-map`.
-- **D1** (`traffic-map-db`) stores the aggregated `sources`, `destinations` and `routes`.
+It runs on Cloudflare:
+
+- **Cloudflare Pages** hosts the website.
+- **Cloudflare D1** stores the map data.
+- **Cloudflare Worker** refreshes the data from your Zero Trust logs.
 
 ## Architecture
 
@@ -25,19 +26,19 @@ curved arcs between origin and destination countries.
 
 ## Beginner deployment guide
 
-Follow this path if you are new to Cloudflare. It uses the guided setup wizard
-and tells you what to click when Cloudflare needs manual approval.
+Use this guide if you are new to Cloudflare. You mainly need to copy commands,
+paste values when asked, and click a few things in the Cloudflare dashboard.
 
 ### What you need before starting
 
 1. A [Cloudflare account](https://dash.cloudflare.com/sign-up).
 2. [Node.js 18 or newer](https://nodejs.org/).
 3. This project downloaded or cloned to your computer.
-4. Access to the Cloudflare account that has your Zero Trust/Gateway logs.
+4. Access to the Cloudflare account that has your Zero Trust logs.
 
-### Step 1: Open a terminal in this folder
+### Step 1: Install the project
 
-On Windows, open PowerShell in the project folder, then run:
+Open PowerShell in this project folder and run:
 
 ```powershell
 npm install
@@ -45,8 +46,8 @@ npm install
 
 ### Step 2: Create your Cloudflare API token
 
-The setup wizard can upload your token, but Cloudflare requires you to create it
-in the dashboard first.
+The app needs permission to read your Zero Trust traffic data. Cloudflare makes
+you create this token manually for security.
 
 1. Open the [Cloudflare dashboard](https://dash.cloudflare.com/).
 2. Click your profile icon.
@@ -58,7 +59,8 @@ in the dashboard first.
 7. Under **Account Resources**, select the account used by this project.
 8. Click through the confirmation screens and copy the token.
 
-Keep this token private. You will paste it into the setup wizard later.
+Keep this token private. You will paste it into the setup wizard later. Do not
+commit it to GitHub.
 
 ### Step 3: Run the guided setup wizard
 
@@ -66,56 +68,63 @@ Keep this token private. You will paste it into the setup wizard later.
 npm run setup
 ```
 
-The wizard will ask simple questions and run the Cloudflare commands for you.
-When Wrangler asks you to log in, a browser window will open. Approve access,
-then return to the terminal.
+The wizard asks simple questions and runs most Cloudflare commands for you.
+When a browser opens for Cloudflare login, approve it, then return to
+PowerShell.
 
-The wizard helps with:
+The wizard will help you:
 
-1. Logging in to Cloudflare.
-2. Creating or selecting the D1 database.
-3. Saving the D1 `database_id` into both Wrangler config files.
-4. Applying `schema.sql` to D1.
-5. Deploying the Cloudflare Pages website.
-6. Deploying the refresh Worker.
-7. Uploading the required Worker secrets.
+1. Log in to Cloudflare.
+2. Create or select the database.
+3. Set up the database tables.
+4. Deploy the website.
+5. Deploy the background refresh Worker.
+6. Save the required secrets.
 
-### Step 4: Bind D1 to the Pages project
+### Step 4: Connect the database to the website
 
-After the Pages deploy finishes, check the D1 binding in Cloudflare:
+After the website deploys, make sure it is connected to the database:
 
 1. Open the [Cloudflare dashboard](https://dash.cloudflare.com/).
 2. Go to **Workers & Pages**.
 3. Open the `cloudflare-traffic-map` Pages project.
 4. Go to **Settings** → **Functions** → **D1 database bindings**.
-5. Add a binding if it is missing:
+5. Add this binding if it is missing:
    - **Variable name**: `DB`
    - **D1 database**: `traffic-map-db`
 6. Save the setting.
 
-### Step 5: Test the deployment
+### Step 5: Test your deployment
 
-Open the Pages URL printed by Wrangler. It should look similar to:
+Use the exact URL printed by Wrangler after deployment. It may be different for
+each Cloudflare account.
+
+Your website URL may look like this:
 
 ```text
 https://cloudflare-traffic-map.pages.dev
 ```
 
-To test the refresh Worker, open the status URL printed by the setup wizard. It
-will look similar to:
+This is only an example. If Wrangler prints a different URL, use that one.
+
+To test the refresh Worker, use the exact status URL printed by the setup
+wizard. It may look like this:
 
 ```text
 https://traffic-map-refresh.<your-subdomain>.workers.dev/status
 ```
 
-If the map loads but has no live traffic yet, wait for the cron job or trigger a
-manual refresh with the `REFRESH_TOKEN` shown by the wizard.
+`<your-subdomain>` is different for each Cloudflare account.
+
+If the map opens but does not show live traffic yet, wait a few minutes. The
+refresh Worker runs automatically. You can also run a manual refresh with the
+`REFRESH_TOKEN` shown by the wizard.
 
 ## Optional: one-click Pages deploy
 
-The button at the top can create the Cloudflare Pages project from GitHub, but
-it does not finish the full app setup. You still need D1, schema, D1 binding,
-the refresh Worker, and Worker secrets.
+The button at the top can create the website project from GitHub, but it does
+not finish everything. You still need to set up the database, connect it to the
+website, deploy the refresh Worker, and add secrets.
 
 Use the guided setup above if you want the smoothest beginner path.
 
