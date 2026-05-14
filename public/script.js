@@ -61,7 +61,8 @@
   function setupMap(width, height) {
     canvasWidth = width;
     canvasHeight = height;
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const compactCanvas = Math.min(width, height) < 520;
+    const dpr = Math.min(window.devicePixelRatio || 1, compactCanvas ? 1.25 : 1.5);
     cometCanvas.width = Math.round(width * dpr);
     cometCanvas.height = Math.round(height * dpr);
     svg.attr('viewBox', `0 0 ${width} ${height}`)
@@ -131,14 +132,16 @@
     }
     const sources = (data.sources || []).filter(s => s.lat != null && s.lng != null);
     const destinations = (data.destinations || []).filter(d => d.lat != null && d.lng != null);
+    const viewMin = Math.max(280, Math.min(canvasWidth || 960, canvasHeight || 520));
+    const isCompactView = viewMin < 520;
+    const routeLimit = isCompactView ? 140 : viewMin < 760 ? 170 : 220;
     const routes = (data.routes || [])
       .filter(r => r.sourceLat != null && r.destinationLat != null)
-      .slice(0, 200);
+      .slice(0, routeLimit);
 
     const maxDest = Math.max(1, ...destinations.map(d => d.count));
     const maxSrc  = Math.max(1, ...sources.map(s => s.count));
     const maxRoute = Math.max(1, ...routes.map(r => r.count));
-    const viewMin = Math.max(280, Math.min(canvasWidth || 960, canvasHeight || 520));
     const mobileFactor = Math.max(0.58, Math.min(1, viewMin / 640));
     const destMin = Math.max(2.8, 4 * mobileFactor);
     const destMax = Math.min(22, Math.max(9, viewMin * 0.032));
@@ -194,13 +197,16 @@
       0.022 + 0.008 * mobileFactor,
     ]);
     const cometSize = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([cometMin, cometMax]);
-    const routePaths = routes.map((route, routeIndex) => {
+    const routePaths = routes.map(route => {
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', curvedArc(
         { lat: route.sourceLat, lng: route.sourceLng },
         { lat: route.destinationLat, lng: route.destinationLng }));
       const length = path.getTotalLength();
-      const sampleCount = Math.max(120, Math.min(420, Math.round(length * 0.9)));
+      const sampleCount = Math.max(
+        isCompactView ? 90 : 110,
+        Math.min(isCompactView ? 240 : 340, Math.round(length * (isCompactView ? 0.6 : 0.75))),
+      );
       const xs = new Float32Array(sampleCount + 1);
       const ys = new Float32Array(sampleCount + 1);
       for (let i = 0; i <= sampleCount; i++) {
@@ -245,9 +251,13 @@
         y: routePath.ys[i] + (routePath.ys[i + 1] - routePath.ys[i]) * frac,
       };
     };
+    let lastCometFrame = 0;
+    const cometFrameInterval = 16;
     cometTimer = d3.timer(now => {
+      if (document.hidden || now - lastCometFrame < cometFrameInterval) return;
+      lastCometFrame = now;
       const isLight = document.documentElement.dataset.theme === 'light';
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const dpr = Math.min(window.devicePixelRatio || 1, isCompactView ? 1.25 : 1.5);
       cometCtx.setTransform(1, 0, 0, 1, 0, 0);
       cometCtx.clearRect(0, 0, cometCanvas.width, cometCanvas.height);
       cometCtx.setTransform(dpr * currentZoom.k, 0, 0, dpr * currentZoom.k, dpr * currentZoom.x, dpr * currentZoom.y);
@@ -297,7 +307,7 @@
           ? `rgb(${rp.lightRgb.r}, ${rp.lightRgb.g}, ${rp.lightRgb.b})`
           : rp.color;
         cometCtx.shadowColor = rp.color;
-        cometCtx.shadowBlur = isLight ? 0 : rp.size * 2.2;
+        cometCtx.shadowBlur = isLight ? 0 : rp.size * (isCompactView ? 0.8 : 1.6);
         cometCtx.beginPath();
         cometCtx.arc(head.x, head.y, rp.size, 0, Math.PI * 2);
         cometCtx.fill();
