@@ -1,7 +1,5 @@
 # Cloudflare Traffic Destination Map
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/timvoaus/cloudflare-traffic-map)
-
 This project shows your Cloudflare Zero Trust traffic on a world map.
 
 It runs on Cloudflare:
@@ -119,14 +117,6 @@ https://traffic-map-refresh.<your-subdomain>.workers.dev/status
 If the map opens but does not show live traffic yet, wait a few minutes. The
 refresh Worker runs automatically. You can also run a manual refresh with the
 `REFRESH_TOKEN` shown by the wizard.
-
-## Optional: one-click Pages deploy
-
-The button at the top can create the website project from GitHub, but it does
-not finish everything. You still need to set up the database, connect it to the
-website, deploy the refresh Worker, and add secrets.
-
-Use the guided setup above if you want the smoothest beginner path.
 
 ## Optional: prepare secrets with `.env`
 
