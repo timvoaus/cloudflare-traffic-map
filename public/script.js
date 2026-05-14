@@ -140,11 +140,13 @@
     const cometParticles = routes.flatMap((route, routeIndex) =>
       d3.range(Math.round(tailScale(route.count)) + 1).map(step => {
         const tailSteps = Math.round(tailScale(route.count));
+        const fade = 1 - step / (tailSteps + 1);
         return {
           ...route,
           routeIndex,
           step,
           tailSteps,
+          baseOpacity: step === 0 ? 1 : Math.max(0.035, 0.78 * Math.pow(fade, 1.85)),
           progressOffset: step * tailGapScale(route.count),
         };
       }));
@@ -164,13 +166,10 @@
         const fade = 1 - d.step / (d.tailSteps + 1);
         return d.step === 0 ? cometSize(d.count) : Math.max(0.42, cometSize(d.count) * 0.5 * Math.pow(fade, 1.25));
       })
-      .attr('opacity', d => {
-        const fade = 1 - d.step / (d.tailSteps + 1);
-        return d.step === 0 ? 1 : Math.max(0.035, 0.78 * Math.pow(fade, 1.85));
-      })
+      .attr('opacity', d => d.baseOpacity)
       .each(function(d) {
         const el = d3.select(this);
-        const start = performance.now() - d.routeIndex * 230 - d.step * 95;
+        const start = performance.now() - d.routeIndex * 230;
         const duration = flowSpeed(d.count) * 1000;
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', curvedArc(
@@ -179,8 +178,14 @@
         const length = path.getTotalLength();
 
         d3.timer(now => {
-          const progress = ((now - start) / duration - d.progressOffset) % 1;
-          const p = path.getPointAtLength(length * (progress < 0 ? progress + 1 : progress));
+          const headProgress = ((now - start) / duration) % 1;
+          const progress = headProgress - d.progressOffset;
+          if (progress < 0) {
+            el.attr('opacity', 0);
+            return;
+          }
+          el.attr('opacity', d.baseOpacity);
+          const p = path.getPointAtLength(length * progress);
           el.attr('cx', p.x).attr('cy', p.y);
         });
       });
