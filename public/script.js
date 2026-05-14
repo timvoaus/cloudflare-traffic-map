@@ -151,7 +151,7 @@
       // `color` drives `currentColor` in the drop-shadow filter so the glow
       // halo picks up the same per-origin colour as the stroke.
       .style('color', d => originColor(d.sourceCountry))
-      .attr('stroke-width', d => Math.max(2.2, arcW(d.count) * 1.35))
+      .attr('stroke-width', d => Math.max(1.15, arcW(d.count) * 0.72))
       .style('animation-duration', d => `${flowSpeed(d.count).toFixed(2)}s`)
       // Stagger each route so packets don't all pulse in unison.
       .style('animation-delay', (_, i) => `${(-0.23 * i).toFixed(2)}s`);

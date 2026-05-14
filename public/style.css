@@ -202,15 +202,14 @@ body {
 .arc-flow {
   fill: none;
   stroke-linecap: round;
-  stroke-dasharray: 34 96;
+  stroke-dasharray: 80 220;
   stroke-dashoffset: 0;
-  opacity: 0.98;
+  opacity: 0.9;
   pointer-events: none;
   mix-blend-mode: screen;
   filter:
-    drop-shadow(0 0 3px currentColor)
-    drop-shadow(0 0 9px currentColor)
-    drop-shadow(0 0 16px currentColor);
+    drop-shadow(0 0 2px currentColor)
+    drop-shadow(0 0 6px currentColor);
   animation-name: arc-flow-move;
   animation-duration: 4s;
   animation-timing-function: linear;
@@ -219,7 +218,7 @@ body {
 }
 @keyframes arc-flow-move {
   from { stroke-dashoffset: 0; }
-  to   { stroke-dashoffset: -130; }
+  to   { stroke-dashoffset: -300; }
 }
 @media (prefers-reduced-motion: reduce) {
   .arc-flow { animation: none; opacity: 0.4; }
