@@ -110,6 +110,35 @@ npx wrangler deploy
 
 ### Secrets (set once)
 
+Run these commands from `workers/refresh/`.
+
+#### 1. Get your Cloudflare account ID
+
+1. Open the [Cloudflare dashboard](https://dash.cloudflare.com/).
+2. Select the account that contains your Zero Trust/Gateway logs.
+3. Copy the **Account ID** from the account overview page or from the right
+   sidebar on most dashboard pages.
+
+#### 2. Create the API token
+
+1. Open **My Profile** → **API Tokens** → **Create Token**.
+2. Choose **Create Custom Token**.
+3. Add this permission:
+   - **Account** → **Zero Trust** → **Read**
+4. Set **Account Resources** to the account used by this project.
+5. Create the token and copy it immediately. Cloudflare only shows it once.
+
+#### 3. Create a refresh token
+
+`REFRESH_TOKEN` can be any long random string. It is only used to authorize
+manual `/refresh` calls. Generate one locally, for example:
+
+```powershell
+node -e "console.log(crypto.randomUUID() + crypto.randomUUID())"
+```
+
+Then save the values as Worker secrets:
+
 ```powershell
 # 1. Your Cloudflare account ID
 "<ACCOUNT_ID>" | npx wrangler secret put CF_ACCOUNT_ID
