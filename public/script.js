@@ -235,6 +235,27 @@
           : rp.color;
         cometCtx.shadowColor = rp.color;
         cometCtx.shadowBlur = 0;
+        cometCtx.globalAlpha = isLight ? 0.16 : 0.2;
+        cometCtx.lineWidth = Math.max(1, rp.size * 0.34);
+        cometCtx.beginPath();
+        let hasTailPath = false;
+        for (let step = rp.tail.length - 1; step >= 0; step--) {
+          const segment = rp.tail[step];
+          const progress = headProgress - segment.offset;
+          if (progress < 0) continue;
+          const p = sampleAt(rp, progress);
+          if (!hasTailPath) {
+            cometCtx.moveTo(p.x, p.y);
+            hasTailPath = true;
+          } else {
+            cometCtx.lineTo(p.x, p.y);
+          }
+        }
+        if (hasTailPath) {
+          const head = sampleAt(rp, headProgress);
+          cometCtx.lineTo(head.x, head.y);
+          cometCtx.stroke();
+        }
         for (let step = rp.tail.length - 1; step >= 0; step--) {
           const segment = rp.tail[step];
           const progress = headProgress - segment.offset;
