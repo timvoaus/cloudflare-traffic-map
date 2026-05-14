@@ -545,6 +545,61 @@
     html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
   });
 
+  // Fullscreen toggle (works on desktop and mobile; falls back to a
+  // CSS pseudo-fullscreen mode for iOS Safari which lacks the API on <body>).
+  const fsBtn = document.getElementById('btn-fullscreen');
+  const fsEnterIcon = fsBtn.querySelector('.icon-fs-enter');
+  const fsExitIcon = fsBtn.querySelector('.icon-fs-exit');
+  const isFsApiAvailable = () => !!(
+    document.documentElement.requestFullscreen
+    || document.documentElement.webkitRequestFullscreen
+    || document.documentElement.msRequestFullscreen
+  );
+  const getFsElement = () =>
+    document.fullscreenElement
+    || document.webkitFullscreenElement
+    || document.msFullscreenElement;
+  const updateFsUi = () => {
+    const active = !!getFsElement() || document.body.classList.contains('is-pseudo-fullscreen');
+    fsBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    fsBtn.title = active ? 'Exit fullscreen' : 'Toggle fullscreen';
+    if (fsEnterIcon) fsEnterIcon.hidden = active;
+    if (fsExitIcon) fsExitIcon.hidden = !active;
+    setTimeout(init, 80);
+  };
+  const enterFs = async () => {
+    const el = document.documentElement;
+    try {
+      if (el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' });
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      else if (el.msRequestFullscreen) el.msRequestFullscreen();
+      else document.body.classList.add('is-pseudo-fullscreen');
+    } catch {
+      document.body.classList.add('is-pseudo-fullscreen');
+    }
+    updateFsUi();
+  };
+  const exitFs = async () => {
+    try {
+      if (document.exitFullscreen) await document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      else if (document.msExitFullscreen) document.msExitFullscreen();
+    } catch {}
+    document.body.classList.remove('is-pseudo-fullscreen');
+    updateFsUi();
+  };
+  fsBtn.addEventListener('click', () => {
+    const active = !!getFsElement() || document.body.classList.contains('is-pseudo-fullscreen');
+    if (active) exitFs(); else enterFs();
+  });
+  document.addEventListener('fullscreenchange', updateFsUi);
+  document.addEventListener('webkitfullscreenchange', updateFsUi);
+  document.addEventListener('msfullscreenchange', updateFsUi);
+  if (!isFsApiAvailable()) {
+    // Still allow pseudo-fullscreen on iOS Safari.
+    fsBtn.title = 'Toggle fullscreen (in-app)';
+  }
+
   // Responsive
   let resizeTimer;
   window.addEventListener('resize', () => {
