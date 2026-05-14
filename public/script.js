@@ -167,8 +167,8 @@
 
     rootGroup.select('.arc-flows-layer').selectAll('*').remove();
     const flowSpeed = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([8.5, 2.7]);
-    const tailScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([10, 18]);
-    const tailGapScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([0.03, 0.048]);
+    const tailScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([16, 28]);
+    const tailGapScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([0.018, 0.03]);
     const cometSize = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([2.8, 7.8]);
     const routePaths = routes.map((route, routeIndex) => {
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -192,8 +192,8 @@
         const fade = 1 - step / (tailSteps + 1);
         return {
           offset: step * gap,
-          width: Math.max(0.9, size * 0.5 * Math.pow(fade, 0.95)),
-          alpha: Math.max(0.04, 0.78 * Math.pow(fade, 1.85)),
+          width: Math.max(1.05, size * 0.56 * Math.pow(fade, 0.85)),
+          alpha: Math.max(0.035, 0.62 * Math.pow(fade, 1.65)),
         };
       });
       return {
@@ -240,7 +240,7 @@
           const progress = headProgress - segment.offset;
           if (progress < 0) continue;
           const p1 = sampleAt(rp, progress);
-          const p2 = sampleAt(rp, Math.min(headProgress, progress + rp.gap * 0.94));
+          const p2 = sampleAt(rp, Math.min(headProgress, progress + rp.gap * 1.65));
           cometCtx.globalAlpha = segment.alpha;
           cometCtx.lineWidth = segment.width;
           cometCtx.beginPath();
