@@ -199,29 +199,23 @@ body {
    `stroke-dashoffset` animates from 0 → -27 each cycle, which is exactly
    one full dash+gap, giving a seamless loop regardless of the arc length.
    Stroke colour + animation-duration are set inline by script.js. */
-.arc-flow {
-  fill: none;
-  stroke-linecap: round;
-  stroke-dasharray: 150 260;
-  stroke-dashoffset: 0;
-  opacity: 0.95;
+.arc-comet-head,
+.arc-comet-tail {
   pointer-events: none;
   mix-blend-mode: screen;
-  filter:
-    drop-shadow(0 0 3px currentColor)
-    drop-shadow(0 0 8px currentColor);
-  animation-name: arc-flow-move;
-  animation-duration: 4s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  will-change: stroke-dashoffset;
 }
-@keyframes arc-flow-move {
-  from { stroke-dashoffset: 0; }
-  to   { stroke-dashoffset: -410; }
+.arc-comet-head {
+  filter:
+    drop-shadow(0 0 3px var(--comet-color))
+    drop-shadow(0 0 9px var(--comet-color))
+    drop-shadow(0 0 16px var(--comet-color));
+}
+.arc-comet-tail {
+  filter: drop-shadow(0 0 5px var(--comet-color));
 }
 @media (prefers-reduced-motion: reduce) {
-  .arc-flow { animation: none; opacity: 0.4; }
+  .arc-comet-head,
+  .arc-comet-tail { opacity: 0.35; }
 }
 
 /* Origin pins — fill colour is set inline per origin country. */
