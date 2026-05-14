@@ -34,6 +34,11 @@
     const c = hexToRgb(hex);
     return `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`;
   };
+  const darkenRgb = (color, factor = 0.62) => ({
+    r: Math.round(color.r * factor),
+    g: Math.round(color.g * factor),
+    b: Math.round(color.b * factor),
+  });
 
   let projection, pathGen, zoomBehavior, rootGroup;
   let cometTimer;
@@ -196,6 +201,7 @@
         duration: flowSpeed(route.count) * 1000,
         color: originColor(route.sourceCountry),
         colorRgb: hexToRgb(originColor(route.sourceCountry)),
+        lightRgb: darkenRgb(hexToRgb(originColor(route.sourceCountry))),
         tail,
         gap,
         size,
@@ -216,16 +222,16 @@
       cometCtx.setTransform(1, 0, 0, 1, 0, 0);
       cometCtx.clearRect(0, 0, cometCanvas.width, cometCanvas.height);
       cometCtx.setTransform(dpr * currentZoom.k, 0, 0, dpr * currentZoom.k, dpr * currentZoom.x, dpr * currentZoom.y);
-      cometCtx.globalCompositeOperation = isLight ? 'multiply' : 'lighter';
+      cometCtx.globalCompositeOperation = isLight ? 'source-over' : 'lighter';
       cometCtx.lineCap = 'round';
       for (let i = 0; i < routePaths.length; i++) {
         const rp = routePaths[i];
         const headProgress = ((now - rp.start) / rp.duration) % 1;
         cometCtx.strokeStyle = isLight
-          ? `rgba(${rp.colorRgb.r}, ${rp.colorRgb.g}, ${rp.colorRgb.b}, 0.95)`
+          ? `rgb(${rp.lightRgb.r}, ${rp.lightRgb.g}, ${rp.lightRgb.b})`
           : rp.color;
-        cometCtx.shadowColor = isLight ? rgba(rp.color, 0.45) : rp.color;
-        cometCtx.shadowBlur = isLight ? 1.4 : 0;
+        cometCtx.shadowColor = rp.color;
+        cometCtx.shadowBlur = 0;
         for (let step = rp.tail.length - 1; step >= 0; step--) {
           const segment = rp.tail[step];
           const progress = headProgress - segment.offset;
@@ -242,10 +248,10 @@
         const head = sampleAt(rp, headProgress);
         cometCtx.globalAlpha = 1;
         cometCtx.fillStyle = isLight
-          ? `rgba(${rp.colorRgb.r}, ${rp.colorRgb.g}, ${rp.colorRgb.b}, 0.98)`
+          ? `rgb(${rp.lightRgb.r}, ${rp.lightRgb.g}, ${rp.lightRgb.b})`
           : rp.color;
-        cometCtx.shadowColor = isLight ? rgba(rp.color, 0.55) : rp.color;
-        cometCtx.shadowBlur = rp.size * (isLight ? 1.15 : 2.2);
+        cometCtx.shadowColor = rp.color;
+        cometCtx.shadowBlur = isLight ? 0 : rp.size * 2.2;
         cometCtx.beginPath();
         cometCtx.arc(head.x, head.y, rp.size, 0, Math.PI * 2);
         cometCtx.fill();

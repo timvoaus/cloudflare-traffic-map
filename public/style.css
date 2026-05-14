@@ -185,7 +185,7 @@ body {
 }
 
 [data-theme="light"] #comet-canvas {
-  mix-blend-mode: multiply;
+  mix-blend-mode: normal;
 }
 
 .country {
