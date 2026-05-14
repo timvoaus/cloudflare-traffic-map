@@ -416,24 +416,28 @@ html[data-theme="light"] .legend-toggle {
   border-color: rgba(0,0,0,0.08);
 }
 .route-legend.is-collapsed {
-  max-height: 34px;
-  width: auto;
-  padding: 6px 34px 6px 12px;
+  width: 32px;
+  height: 32px;
+  max-height: 32px;
+  padding: 0;
   overflow: hidden;
+  border-radius: 8px;
 }
 .route-legend.is-collapsed .route-legend-body {
   display: none;
 }
+.route-legend.is-collapsed .legend-toggle {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+}
 .route-legend.is-collapsed .legend-toggle-icon {
   transform: rotate(180deg);
-}
-.route-legend.is-collapsed::before {
-  content: 'Legend';
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  opacity: 0.75;
 }
 .route-legend-body {
   display: block;
@@ -655,11 +659,19 @@ html[data-theme="light"] .map-key {
   }
 
   .title {
-    max-width: 48vw;
+    max-width: 40vw;
+    font-size: 0.95rem;
   }
 
   .badge {
-    display: none;
+    display: inline-block;
+    max-width: 52vw;
+    font-size: 0.55rem;
+    line-height: 1.2;
+    padding: 2px 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .route-legend {

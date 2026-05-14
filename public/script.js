@@ -460,11 +460,29 @@
     const total = sources.reduce((s, d) => s + (d.count || 0), 0);
     document.getElementById('stat-total').textContent = formatNumber(total);
 
-    if (data.updatedAt) {
+    const fmtShort = iso => {
+      try {
+        const d = new Date(iso);
+        return d.toLocaleString(undefined, {
+          month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit',
+        });
+      } catch { return ''; }
+    };
+    const win = data.lastRefresh && data.lastRefresh.window;
+    if (win && win.from && win.to) {
+      updatedBadge.textContent = `Data: ${fmtShort(win.from)} → ${fmtShort(win.to)}`;
+      const refreshedAt = data.lastRefresh.updatedAt || data.updatedAt;
+      updatedBadge.title = refreshedAt
+        ? `Cloudflare GraphQL window\nFrom: ${win.from}\nTo:   ${win.to}\nLast refreshed: ${new Date(refreshedAt).toLocaleString()}`
+        : `Cloudflare GraphQL window\nFrom: ${win.from}\nTo:   ${win.to}`;
+    } else if (data.updatedAt) {
       const dt = new Date(data.updatedAt);
       updatedBadge.textContent = `Updated ${dt.toLocaleTimeString()}`;
+      updatedBadge.title = `Loaded at ${dt.toLocaleString()}`;
     } else {
       updatedBadge.textContent = 'Live';
+      updatedBadge.title = '';
     }
   }
 
