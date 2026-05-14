@@ -110,9 +110,10 @@
     svg.attr('viewBox', `0 0 ${width} ${height}`)
        .attr('preserveAspectRatio', 'xMidYMid meet');
 
+    const fitScale = Math.min(width / (2 * Math.PI), height / Math.PI);
     projection = d3.geoEquirectangular()
-      .scale(width / 6.45)
-      .translate([width / 2, height / 1.9]);
+      .scale(fitScale)
+      .translate([width / 2, height / 2]);
     pathGen = d3.geoPath(projection);
     svg.selectAll('*').remove();
     rootGroup = svg.append('g').attr('class', 'root');
