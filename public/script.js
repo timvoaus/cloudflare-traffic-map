@@ -41,6 +41,7 @@
     rootGroup.append('g').attr('class', 'countries-layer');
     rootGroup.append('g').attr('class', 'arcs-layer');
     rootGroup.append('g').attr('class', 'arc-flows-layer');
+    rootGroup.append('g').attr('class', 'spark-layer');
     rootGroup.append('g').attr('class', 'dest-layer');
     rootGroup.append('g').attr('class', 'origin-layer');
 
@@ -129,18 +130,18 @@
         { lat: d.destinationLat, lng: d.destinationLng }))
       .attr('stroke', d => originColor(d.sourceCountry))
       .attr('stroke-width', d => arcW(d.count))
-      .attr('opacity', d => arcOpacity(d.count) * 0.42);
+      .attr('opacity', d => arcOpacity(d.count) * 0.22);
 
     // Flow overlay — dotted "data packets" moving origin → destination.
     // One faster-moving stream per route, coloured to match the origin.
     const flowSpeed = d3.scaleSqrt().domain([1, maxRoute]).range([8, 2.8]); // seconds; busier = faster
-    const tailSteps = 18;
+    const tailSteps = 26;
     const cometParticles = routes.flatMap((route, routeIndex) =>
       d3.range(tailSteps + 1).map(step => ({
         ...route,
         routeIndex,
         step,
-        progressOffset: step * 0.018,
+        progressOffset: step * 0.012,
       })));
     const flowSel = rootGroup.select('.arc-flows-layer')
       .selectAll('circle')
@@ -154,8 +155,8 @@
       .attr('class', d => d.step === 0 ? 'arc-comet-head' : 'arc-comet-tail')
       .attr('fill', d => originColor(d.sourceCountry))
       .style('--comet-color', d => originColor(d.sourceCountry))
-      .attr('r', d => Math.max(0.45, arcW(d.count) * (d.step === 0 ? 0.82 : 0.4 * Math.pow(1 - d.step / (tailSteps + 1), 1.25))))
-      .attr('opacity', d => d.step === 0 ? 1 : Math.max(0.025, 0.68 * Math.pow(1 - d.step / (tailSteps + 1), 1.8)))
+      .attr('r', d => Math.max(0.35, arcW(d.count) * (d.step === 0 ? 0.95 : 0.34 * Math.pow(1 - d.step / (tailSteps + 1), 1.35))))
+      .attr('opacity', d => d.step === 0 ? 1 : Math.max(0.015, 0.72 * Math.pow(1 - d.step / (tailSteps + 1), 2.25)))
       .each(function(d) {
         const el = d3.select(this);
         const start = performance.now() - d.routeIndex * 230 - d.step * 95;
@@ -172,6 +173,30 @@
           el.attr('cx', p.x).attr('cy', p.y);
         });
       });
+
+    const sparkCount = 6;
+    const sparks = routes.slice(0, 32).flatMap((route, routeIndex) =>
+      d3.range(sparkCount).map(spark => ({
+        ...route,
+        routeIndex,
+        spark,
+        angle: ((routeIndex * 73 + spark * 97) % 360) * Math.PI / 180,
+        distance: 4 + ((routeIndex + spark * 3) % 8),
+      })));
+    const sparkSel = rootGroup.select('.spark-layer')
+      .selectAll('circle')
+      .data(sparks, r => `${r.sourceCountry}->${r.destinationCountry}:${r.spark}`);
+    sparkSel.exit().remove();
+    sparkSel.enter().append('circle')
+      .attr('class', 'destination-spark')
+      .attr('pointer-events', 'none')
+      .merge(sparkSel)
+      .attr('fill', d => originColor(d.sourceCountry))
+      .style('--spark-color', d => originColor(d.sourceCountry))
+      .attr('r', d => 0.7 + (d.spark % 3) * 0.28)
+      .attr('cx', d => projection([d.destinationLng, d.destinationLat])[0] + Math.cos(d.angle) * d.distance)
+      .attr('cy', d => projection([d.destinationLng, d.destinationLat])[1] + Math.sin(d.angle) * d.distance)
+      .style('animation-delay', d => `${-0.18 * (d.routeIndex + d.spark)}s`);
 
     // Destination bubbles
     const destSel = rootGroup.select('.dest-layer')
