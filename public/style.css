@@ -386,8 +386,60 @@ html[data-theme="light"] .origin-pin .origin-pin-body {
   font-size: 12px;
   line-height: 1.35;
   pointer-events: auto;
+  transition: max-height 0.2s ease, padding 0.2s ease, width 0.2s ease;
+}
+.legend-toggle {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: inherit;
+  cursor: pointer;
+  z-index: 2;
+}
+.legend-toggle:hover {
+  background: rgba(255,255,255,0.12);
+}
+.legend-toggle-icon {
+  transition: transform 0.2s ease;
+}
+html[data-theme="light"] .legend-toggle {
+  background: rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.08);
+}
+.route-legend.is-collapsed {
+  max-height: 34px;
+  width: auto;
+  padding: 6px 34px 6px 12px;
+  overflow: hidden;
+}
+.route-legend.is-collapsed .route-legend-body {
+  display: none;
+}
+.route-legend.is-collapsed .legend-toggle-icon {
+  transform: rotate(180deg);
+}
+.route-legend.is-collapsed::before {
+  content: 'Legend';
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.route-legend-body {
+  display: block;
 }
 .route-legend-title {
+  padding-right: 28px;
   font-weight: 600;
   margin-bottom: 6px;
   font-size: 11px;

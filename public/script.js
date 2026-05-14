@@ -357,7 +357,8 @@
     let lastCometFrame = 0;
     const cometFrameInterval = 16;
     requestAnimationFrame(() => drawComets(performance.now()));
-    cometTimer = d3.timer(now => {
+    cometTimer = d3.timer(() => {
+      const now = performance.now();
       if (document.hidden || now - lastCometFrame < cometFrameInterval) return;
       lastCometFrame = now;
       drawComets(now);
@@ -501,6 +502,23 @@
 
   // Controls
   document.getElementById('btn-refresh').addEventListener('click', loadData);
+  const legendEl = document.getElementById('route-legend');
+  const legendToggleBtn = document.getElementById('legend-toggle');
+  const LEGEND_STORAGE_KEY = 'cf-traffic-map.legend-collapsed';
+  const applyLegendCollapsed = collapsed => {
+    legendEl.classList.toggle('is-collapsed', collapsed);
+    legendToggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    legendToggleBtn.setAttribute('aria-label', collapsed ? 'Expand legend' : 'Collapse legend');
+    legendToggleBtn.title = collapsed ? 'Expand legend' : 'Collapse legend';
+  };
+  try {
+    applyLegendCollapsed(localStorage.getItem(LEGEND_STORAGE_KEY) === '1');
+  } catch (_) { /* ignore storage errors */ }
+  legendToggleBtn.addEventListener('click', () => {
+    const collapsed = !legendEl.classList.contains('is-collapsed');
+    applyLegendCollapsed(collapsed);
+    try { localStorage.setItem(LEGEND_STORAGE_KEY, collapsed ? '1' : '0'); } catch (_) {}
+  });
   document.getElementById('zoom-in').addEventListener('click', () => svg.transition().call(zoomBehavior.scaleBy, 1.5));
   document.getElementById('zoom-out').addEventListener('click', () => svg.transition().call(zoomBehavior.scaleBy, 1 / 1.5));
   document.getElementById('zoom-reset').addEventListener('click', () => svg.transition().call(zoomBehavior.transform, d3.zoomIdentity));
