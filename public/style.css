@@ -380,6 +380,9 @@ html[data-theme="light"] .origin-pin .origin-pin-body {
   backdrop-filter: blur(6px);
   width: 280px;
   max-width: calc(100vw - 32px);
+  max-height: min(60vh, 460px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   font-size: 12px;
   line-height: 1.35;
   pointer-events: auto;
@@ -404,11 +407,6 @@ html[data-theme="light"] .origin-pin .origin-pin-body {
 .route-legend-list {
   display: grid;
   gap: 4px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-.route-legend-list.dest-legend-list {
-  max-height: 220px;
 }
 .route-legend-divider {
   height: 1px;
@@ -553,14 +551,9 @@ html[data-theme="light"] .map-key {
     bottom: calc(0.75rem + env(safe-area-inset-bottom));
     width: auto;
     max-width: none;
-    max-height: min(42vh, 260px);
-    overflow: hidden auto;
+    max-height: min(50vh, 320px);
     padding: 0.55rem 0.65rem;
     font-size: 0.68rem;
-  }
-
-  .route-legend-list {
-    max-height: 112px;
   }
 
   .route-legend-item {
@@ -619,20 +612,12 @@ html[data-theme="light"] .map-key {
 
   .route-legend {
     right: 4rem;
-    max-height: min(28vh, 190px);
+    max-height: min(42vh, 240px);
     padding: 0.5rem 0.6rem;
   }
 
   .route-legend-title {
     margin-bottom: 0.35rem;
-  }
-
-  .route-legend-list {
-    max-height: 72px;
-  }
-
-  .route-legend-list.dest-legend-list {
-    max-height: 82px;
   }
 
   .route-legend-divider {
