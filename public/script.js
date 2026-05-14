@@ -134,9 +134,9 @@
     // Flow overlay — dotted "data packets" moving origin → destination.
     // One faster-moving stream per route, coloured to match the origin.
     const flowSpeed = d3.scaleSqrt().domain([1, maxRoute]).range([9, 2.1]); // seconds; busier = faster
-    const tailScale = d3.scaleSqrt().domain([1, maxRoute]).range([12, 32]);
-    const tailGapScale = d3.scaleSqrt().domain([1, maxRoute]).range([0.015, 0.026]);
-    const cometSize = d3.scaleSqrt().domain([1, maxRoute]).range([1.1, 4.6]);
+    const tailScale = d3.scaleSqrt().domain([1, maxRoute]).range([22, 38]);
+    const tailGapScale = d3.scaleSqrt().domain([1, maxRoute]).range([0.019, 0.03]);
+    const cometSize = d3.scaleSqrt().domain([1, maxRoute]).range([1.35, 4.8]);
     const cometParticles = routes.flatMap((route, routeIndex) =>
       d3.range(Math.round(tailScale(route.count)) + 1).map(step => {
         const tailSteps = Math.round(tailScale(route.count));
@@ -162,11 +162,11 @@
       .style('--comet-color', d => originColor(d.sourceCountry))
       .attr('r', d => {
         const fade = 1 - d.step / (d.tailSteps + 1);
-        return d.step === 0 ? cometSize(d.count) : Math.max(0.35, cometSize(d.count) * 0.48 * Math.pow(fade, 1.35));
+        return d.step === 0 ? cometSize(d.count) : Math.max(0.42, cometSize(d.count) * 0.5 * Math.pow(fade, 1.25));
       })
       .attr('opacity', d => {
         const fade = 1 - d.step / (d.tailSteps + 1);
-        return d.step === 0 ? 1 : Math.max(0.018, 0.72 * Math.pow(fade, 2.1));
+        return d.step === 0 ? 1 : Math.max(0.035, 0.78 * Math.pow(fade, 1.85));
       })
       .each(function(d) {
         const el = d3.select(this);
