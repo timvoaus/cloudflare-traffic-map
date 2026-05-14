@@ -37,6 +37,39 @@ your Cloudflare account and create the Pages project.
 After deployment, create or select a D1 database named `traffic-map-db`, apply
 `schema.sql`, and ensure the Pages Function has a D1 binding named `DB`.
 
+## Beginner guided setup
+
+If you are new to Cloudflare, use the interactive setup wizard instead of
+running every Wrangler command manually.
+
+```powershell
+npm install
+npm run setup
+```
+
+The wizard guides you through:
+
+1. Logging in to Cloudflare with Wrangler.
+2. Creating or selecting the D1 database.
+3. Updating both `wrangler.toml` files with the D1 `database_id`.
+4. Applying `schema.sql` to the remote D1 database.
+5. Deploying the Cloudflare Pages site.
+6. Reminding you to bind D1 to Pages as `DB`.
+7. Deploying the refresh Worker.
+8. Uploading the required Worker secrets.
+
+You can optionally copy `.env.example` to `.env` and fill in values before
+running the wizard:
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+npm run setup
+```
+
+The API token still has to be created in the Cloudflare dashboard because it
+requires account-specific permission approval.
+
 ## One-shot deploy
 
 From this folder:
