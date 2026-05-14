@@ -188,10 +188,11 @@ body {
   fill: none;
   stroke-width: 1.2px;
   stroke-linecap: round;
-  opacity: 0.55;
+  opacity: 0.32;
+  filter: drop-shadow(0 0 2px currentColor);
   transition: opacity 0.15s, stroke-width 0.15s;
 }
-.arc-path:hover { opacity: 1; stroke-width: 2px; }
+.arc-path:hover { opacity: 0.85; stroke-width: 2px; }
 
 /* ── Data-transfer flow animation ──────────────────────────────
    Dotted stream drawn on top of every arc, flowing origin → destination.
@@ -201,11 +202,15 @@ body {
 .arc-flow {
   fill: none;
   stroke-linecap: round;
-  stroke-dasharray: 3 24;
+  stroke-dasharray: 34 96;
   stroke-dashoffset: 0;
-  opacity: 0.95;
+  opacity: 0.98;
   pointer-events: none;
-  filter: drop-shadow(0 0 4px currentColor);
+  mix-blend-mode: screen;
+  filter:
+    drop-shadow(0 0 3px currentColor)
+    drop-shadow(0 0 9px currentColor)
+    drop-shadow(0 0 16px currentColor);
   animation-name: arc-flow-move;
   animation-duration: 4s;
   animation-timing-function: linear;
@@ -214,7 +219,7 @@ body {
 }
 @keyframes arc-flow-move {
   from { stroke-dashoffset: 0; }
-  to   { stroke-dashoffset: -27; }
+  to   { stroke-dashoffset: -130; }
 }
 @media (prefers-reduced-motion: reduce) {
   .arc-flow { animation: none; opacity: 0.4; }

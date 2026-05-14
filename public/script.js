@@ -133,7 +133,7 @@
 
     // Flow overlay — dotted "data packets" moving origin → destination.
     // One faster-moving stream per route, coloured to match the origin.
-    const flowSpeed = d3.scaleSqrt().domain([1, maxRoute]).range([7, 2.2]); // seconds; busier = faster
+    const flowSpeed = d3.scaleSqrt().domain([1, maxRoute]).range([8, 2.8]); // seconds; busier = faster
     const flowSel = rootGroup.select('.arc-flows-layer')
       .selectAll('path')
       .data(routes, r => `${r.sourceCountry}->${r.destinationCountry}`);
@@ -151,7 +151,7 @@
       // `color` drives `currentColor` in the drop-shadow filter so the glow
       // halo picks up the same per-origin colour as the stroke.
       .style('color', d => originColor(d.sourceCountry))
-      .attr('stroke-width', d => Math.max(1.4, arcW(d.count) * 0.9))
+      .attr('stroke-width', d => Math.max(2.2, arcW(d.count) * 1.35))
       .style('animation-duration', d => `${flowSpeed(d.count).toFixed(2)}s`)
       // Stagger each route so packets don't all pulse in unison.
       .style('animation-delay', (_, i) => `${(-0.23 * i).toFixed(2)}s`);
