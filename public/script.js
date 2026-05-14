@@ -138,10 +138,12 @@
 
     // Flow overlay — dotted "data packets" moving origin → destination.
     // One faster-moving stream per route, coloured to match the origin.
-    const flowSpeed = d3.scaleSqrt().domain([1, maxRoute]).range([9, 2.1]); // seconds; busier = faster
-    const tailScale = d3.scaleSqrt().domain([1, maxRoute]).range([22, 38]);
-    const tailGapScale = d3.scaleSqrt().domain([1, maxRoute]).range([0.019, 0.03]);
-    const cometSize = d3.scaleSqrt().domain([1, maxRoute]).range([1.35, 4.8]);
+    // Use a pow(0.35) scale so small routes still get visible comets even when
+    // a single route dominates total volume (real data is very skewed).
+    const flowSpeed = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([9, 2.1]);
+    const tailScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([14, 26]);
+    const tailGapScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([0.022, 0.034]);
+    const cometSize = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([1.7, 5.2]);
     const routePaths = new Map();
     routes.forEach((route, routeIndex) => {
       const key = `${route.sourceCountry}->${route.destinationCountry}`;
