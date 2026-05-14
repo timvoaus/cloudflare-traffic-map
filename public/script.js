@@ -38,6 +38,14 @@
     svg.selectAll('*').remove();
     rootGroup = svg.append('g').attr('class', 'root');
 
+    rootGroup.append('defs').html(`
+      <linearGradient id="arc-comet-gradient" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="currentColor" stop-opacity="0"></stop>
+        <stop offset="56%" stop-color="currentColor" stop-opacity="0.1"></stop>
+        <stop offset="82%" stop-color="currentColor" stop-opacity="0.55"></stop>
+        <stop offset="100%" stop-color="currentColor" stop-opacity="1"></stop>
+      </linearGradient>
+    `);
     rootGroup.append('g').attr('class', 'countries-layer');
     rootGroup.append('g').attr('class', 'arcs-layer');
     rootGroup.append('g').attr('class', 'arc-flows-layer');
@@ -134,30 +142,24 @@
     // Flow overlay — dotted "data packets" moving origin → destination.
     // One faster-moving stream per route, coloured to match the origin.
     const flowSpeed = d3.scaleSqrt().domain([1, maxRoute]).range([8, 2.8]); // seconds; busier = faster
-    const flowRoutes = routes.flatMap(route => [
-      { ...route, flowPart: 'tail' },
-      { ...route, flowPart: 'head' },
-    ]);
     const flowSel = rootGroup.select('.arc-flows-layer')
       .selectAll('path')
-      .data(flowRoutes, r => `${r.sourceCountry}->${r.destinationCountry}:${r.flowPart}`);
+      .data(routes, r => `${r.sourceCountry}->${r.destinationCountry}`);
     flowSel.exit().remove();
     const flowEnter = flowSel.enter().append('path')
       .attr('fill', 'none')
       .attr('pointer-events', 'none');
 
     flowEnter.merge(flowSel)
-      .attr('class', d => `arc-flow arc-flow-${d.flowPart}`)
+      .attr('class', 'arc-flow')
       .attr('d', d => curvedArc(
         { lat: d.sourceLat, lng: d.sourceLng },
         { lat: d.destinationLat, lng: d.destinationLng }))
-      .attr('stroke', d => originColor(d.sourceCountry))
+      .attr('stroke', 'url(#arc-comet-gradient)')
       // `color` drives `currentColor` in the drop-shadow filter so the glow
       // halo picks up the same per-origin colour as the stroke.
       .style('color', d => originColor(d.sourceCountry))
-      .attr('stroke-width', d => d.flowPart === 'head'
-        ? Math.max(1.35, arcW(d.count) * 0.78)
-        : Math.max(0.8, arcW(d.count) * 0.46))
+      .attr('stroke-width', d => Math.max(1.15, arcW(d.count) * 0.7))
       .style('animation-duration', d => `${flowSpeed(d.count).toFixed(2)}s`)
       // Stagger each route so packets don't all pulse in unison.
       .style('animation-delay', (_, i) => `${(-0.23 * i).toFixed(2)}s`);
