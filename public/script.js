@@ -25,6 +25,7 @@
   const countryLabel = code => COUNTRY_NAMES[code] || code || 'Unknown';
 
   let projection, pathGen, zoomBehavior, rootGroup;
+  let cometTimer;
   const svg = d3.select(svgEl);
 
   function setupMap(width, height) {
@@ -87,6 +88,10 @@
   }
 
   function render(data) {
+    if (cometTimer) {
+      cometTimer.stop();
+      cometTimer = null;
+    }
     const sources = (data.sources || []).filter(s => s.lat != null && s.lng != null);
     const destinations = (data.destinations || []).filter(d => d.lat != null && d.lng != null);
     const routes = (data.routes || [])
@@ -111,7 +116,7 @@
     const originKeys = sources.map(s => s.country);
     const originColor = d3.scaleOrdinal(palette).domain(originKeys);
 
-    // Arcs (colored by origin)
+    // Invisible route hit areas for tooltips.
     const arcSel = rootGroup.select('.arcs-layer')
       .selectAll('path')
       .data(routes, r => `${r.sourceCountry}->${r.destinationCountry}`);
@@ -127,34 +132,124 @@
       .attr('d', d => curvedArc(
         { lat: d.sourceLat, lng: d.sourceLng },
         { lat: d.destinationLat, lng: d.destinationLng }))
-      .attr('stroke', d => originColor(d.sourceCountry))
-      .attr('stroke-width', d => arcW(d.count))
-      .attr('opacity', d => arcOpacity(d.count));
+      .attr('stroke', 'transparent')
+      .attr('stroke-width', d => Math.max(12, arcW(d.count) * 4))
+      .attr('opacity', 0);
 
     // Flow overlay — dotted "data packets" moving origin → destination.
     // One faster-moving stream per route, coloured to match the origin.
-    const flowSpeed = d3.scaleSqrt().domain([1, maxRoute]).range([7, 2.2]); // seconds; busier = faster
+    const flowSpeed = d3.scaleSqrt().domain([1, maxRoute]).range([9, 2.1]); // seconds; busier = faster
+    const tailScale = d3.scaleSqrt().domain([1, maxRoute]).range([22, 38]);
+    const tailGapScale = d3.scaleSqrt().domain([1, maxRoute]).range([0.019, 0.03]);
+    const cometSize = d3.scaleSqrt().domain([1, maxRoute]).range([1.35, 4.8]);
+    const routePaths = new Map();
+    routes.forEach((route, routeIndex) => {
+      const key = `${route.sourceCountry}->${route.destinationCountry}`;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', curvedArc(
+        { lat: route.sourceLat, lng: route.sourceLng },
+        { lat: route.destinationLat, lng: route.destinationLng }));
+      const length = path.getTotalLength();
+      const sampleCount = Math.max(120, Math.min(420, Math.round(length * 0.9)));
+      const xs = new Float32Array(sampleCount + 1);
+      const ys = new Float32Array(sampleCount + 1);
+      for (let i = 0; i <= sampleCount; i++) {
+        const pt = path.getPointAtLength((i / sampleCount) * length);
+        xs[i] = pt.x;
+        ys[i] = pt.y;
+      }
+      routePaths.set(key, {
+        xs,
+        ys,
+        sampleCount,
+        start: performance.now() - routeIndex * 230,
+        duration: flowSpeed(route.count) * 1000,
+      });
+    });
+    const cometParts = routes.flatMap((route, routeIndex) =>
+      d3.range(Math.round(tailScale(route.count)) + 1).map(step => {
+        const tailSteps = Math.round(tailScale(route.count));
+        const fade = 1 - step / (tailSteps + 1);
+        const routeKey = `${route.sourceCountry}->${route.destinationCountry}`;
+        return {
+          ...route,
+          routeKey,
+          routeIndex,
+          step,
+          tailSteps,
+          baseOpacity: step === 0 ? 1 : Math.max(0.035, 0.78 * Math.pow(fade, 1.85)),
+          progressOffset: step * tailGapScale(route.count),
+          gap: tailGapScale(route.count) * 0.92,
+        };
+      }));
     const flowSel = rootGroup.select('.arc-flows-layer')
-      .selectAll('path')
-      .data(routes, r => `${r.sourceCountry}->${r.destinationCountry}`);
+      .selectAll('circle, line')
+      .data(cometParts, r => `${r.sourceCountry}->${r.destinationCountry}:${r.step}`);
     flowSel.exit().remove();
-    const flowEnter = flowSel.enter().append('path')
-      .attr('class', 'arc-flow')
-      .attr('fill', 'none')
+    const flowEnter = flowSel.enter().append(d => document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      d.step === 0 ? 'circle' : 'line'))
+      .attr('class', d => d.step === 0 ? 'arc-comet-head' : 'arc-comet-streak')
       .attr('pointer-events', 'none');
 
     flowEnter.merge(flowSel)
-      .attr('d', d => curvedArc(
-        { lat: d.sourceLat, lng: d.sourceLng },
-        { lat: d.destinationLat, lng: d.destinationLng }))
-      .attr('stroke', d => originColor(d.sourceCountry))
-      // `color` drives `currentColor` in the drop-shadow filter so the glow
-      // halo picks up the same per-origin colour as the stroke.
-      .style('color', d => originColor(d.sourceCountry))
-      .attr('stroke-width', d => Math.max(1.4, arcW(d.count) * 0.9))
-      .style('animation-duration', d => `${flowSpeed(d.count).toFixed(2)}s`)
-      // Stagger each route so packets don't all pulse in unison.
-      .style('animation-delay', (_, i) => `${(-0.23 * i).toFixed(2)}s`);
+      .attr('class', d => d.step === 0 ? 'arc-comet-head' : 'arc-comet-streak')
+      .attr('fill', d => d.step === 0 ? originColor(d.sourceCountry) : 'none')
+      .attr('stroke', d => d.step === 0 ? null : originColor(d.sourceCountry))
+      .style('--comet-color', d => originColor(d.sourceCountry))
+      .attr('r', d => {
+        const fade = 1 - d.step / (d.tailSteps + 1);
+        return d.step === 0 ? cometSize(d.count) : null;
+      })
+      .attr('stroke-width', d => {
+        if (d.step === 0) return null;
+        const fade = 1 - d.step / (d.tailSteps + 1);
+        return Math.max(0.65, cometSize(d.count) * 0.42 * Math.pow(fade, 0.95));
+      })
+      .attr('opacity', d => d.step === 0 ? 1 : d.baseOpacity);
+
+    const cometNodes = flowEnter.merge(flowSel).nodes();
+    const visibleState = new Uint8Array(cometNodes.length).fill(1);
+    cometTimer = d3.timer(now => {
+      for (let i = 0; i < cometNodes.length; i++) {
+        const node = cometNodes[i];
+        const d = node.__data__;
+        const rp = routePaths.get(d.routeKey);
+        const headProgress = ((now - rp.start) / rp.duration) % 1;
+        const progress = headProgress - d.progressOffset;
+        if (progress < 0) {
+          if (visibleState[i] !== 0) {
+            node.setAttribute('opacity', '0');
+            visibleState[i] = 0;
+          }
+          continue;
+        }
+        if (visibleState[i] !== 1) {
+          node.setAttribute('opacity', d.baseOpacity);
+          visibleState[i] = 1;
+        }
+        const f1 = progress * rp.sampleCount;
+        const i1 = f1 | 0;
+        const fr1 = f1 - i1;
+        const px = rp.xs[i1] + (rp.xs[i1 + 1] - rp.xs[i1]) * fr1;
+        const py = rp.ys[i1] + (rp.ys[i1 + 1] - rp.ys[i1]) * fr1;
+        if (d.step === 0) {
+          node.setAttribute('cx', px);
+          node.setAttribute('cy', py);
+          continue;
+        }
+        const nextProgress = Math.min(headProgress, progress + d.gap);
+        const f2 = nextProgress * rp.sampleCount;
+        const i2 = f2 | 0;
+        const fr2 = f2 - i2;
+        const nx = rp.xs[i2] + (rp.xs[i2 + 1] - rp.xs[i2]) * fr2;
+        const ny = rp.ys[i2] + (rp.ys[i2 + 1] - rp.ys[i2]) * fr2;
+        node.setAttribute('x1', px);
+        node.setAttribute('y1', py);
+        node.setAttribute('x2', nx);
+        node.setAttribute('y2', ny);
+      }
+    });
 
     // Destination bubbles
     const destSel = rootGroup.select('.dest-layer')
