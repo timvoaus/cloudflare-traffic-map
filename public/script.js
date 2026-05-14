@@ -134,16 +134,20 @@
     // Flow overlay — dotted "data packets" moving origin → destination.
     // One faster-moving stream per route, coloured to match the origin.
     const flowSpeed = d3.scaleSqrt().domain([1, maxRoute]).range([8, 2.8]); // seconds; busier = faster
+    const flowRoutes = routes.flatMap(route => [
+      { ...route, flowPart: 'tail' },
+      { ...route, flowPart: 'head' },
+    ]);
     const flowSel = rootGroup.select('.arc-flows-layer')
       .selectAll('path')
-      .data(routes, r => `${r.sourceCountry}->${r.destinationCountry}`);
+      .data(flowRoutes, r => `${r.sourceCountry}->${r.destinationCountry}:${r.flowPart}`);
     flowSel.exit().remove();
     const flowEnter = flowSel.enter().append('path')
-      .attr('class', 'arc-flow')
       .attr('fill', 'none')
       .attr('pointer-events', 'none');
 
     flowEnter.merge(flowSel)
+      .attr('class', d => `arc-flow arc-flow-${d.flowPart}`)
       .attr('d', d => curvedArc(
         { lat: d.sourceLat, lng: d.sourceLng },
         { lat: d.destinationLat, lng: d.destinationLng }))
@@ -151,7 +155,9 @@
       // `color` drives `currentColor` in the drop-shadow filter so the glow
       // halo picks up the same per-origin colour as the stroke.
       .style('color', d => originColor(d.sourceCountry))
-      .attr('stroke-width', d => Math.max(1.15, arcW(d.count) * 0.72))
+      .attr('stroke-width', d => d.flowPart === 'head'
+        ? Math.max(1.35, arcW(d.count) * 0.78)
+        : Math.max(0.8, arcW(d.count) * 0.46))
       .style('animation-duration', d => `${flowSpeed(d.count).toFixed(2)}s`)
       // Stagger each route so packets don't all pulse in unison.
       .style('animation-delay', (_, i) => `${(-0.23 * i).toFixed(2)}s`);
