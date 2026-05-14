@@ -149,9 +149,9 @@
       path.setAttribute('d', curvedArc(
         { lat: route.sourceLat, lng: route.sourceLng },
         { lat: route.destinationLat, lng: route.destinationLng }));
+      const length = path.getTotalLength();
       routePaths.set(key, {
-        path,
-        length: path.getTotalLength(),
+        points: d3.range(241).map(i => path.getPointAtLength(length * (i / 240))),
         start: performance.now() - routeIndex * 230,
         duration: flowSpeed(route.count) * 1000,
       });
@@ -198,6 +198,17 @@
       .attr('opacity', d => d.step === 0 ? 1 : d.baseOpacity);
 
     const cometNodes = flowEnter.merge(flowSel).nodes();
+    const pointAt = (points, progress) => {
+      const scaled = Math.max(0, Math.min(1, progress)) * (points.length - 1);
+      const index = Math.min(points.length - 2, Math.floor(scaled));
+      const mix = scaled - index;
+      const a = points[index];
+      const b = points[index + 1];
+      return {
+        x: a.x + (b.x - a.x) * mix,
+        y: a.y + (b.y - a.y) * mix,
+      };
+    };
     cometTimer = d3.timer(now => {
       for (const node of cometNodes) {
         const d = node.__data__;
@@ -209,14 +220,14 @@
           continue;
         }
         node.setAttribute('opacity', d.baseOpacity);
-        const p = routePath.path.getPointAtLength(routePath.length * progress);
+        const p = pointAt(routePath.points, progress);
         if (d.step === 0) {
           node.setAttribute('cx', p.x);
           node.setAttribute('cy', p.y);
           continue;
         }
         const nextProgress = Math.min(headProgress, progress + tailGapScale(d.count) * 0.92);
-        const next = routePath.path.getPointAtLength(routePath.length * nextProgress);
+        const next = pointAt(routePath.points, nextProgress);
         node.setAttribute('x1', p.x);
         node.setAttribute('y1', p.y);
         node.setAttribute('x2', next.x);
