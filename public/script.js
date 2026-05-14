@@ -235,41 +235,37 @@
           : rp.color;
         cometCtx.shadowColor = rp.color;
         cometCtx.shadowBlur = 0;
-        cometCtx.globalAlpha = isLight ? 0.16 : 0.2;
-        cometCtx.lineWidth = Math.max(1, rp.size * 0.34);
+        const tailEndOffset = rp.tail.length ? rp.tail[rp.tail.length - 1].offset : rp.gap;
+        const startProgress = Math.max(0, headProgress - tailEndOffset);
+        const tailStart = sampleAt(rp, startProgress);
+        const head = sampleAt(rp, headProgress);
+        const gradient = cometCtx.createLinearGradient(tailStart.x, tailStart.y, head.x, head.y);
+        if (isLight) {
+          gradient.addColorStop(0, `rgba(${rp.lightRgb.r}, ${rp.lightRgb.g}, ${rp.lightRgb.b}, 0)`);
+          gradient.addColorStop(0.45, `rgba(${rp.lightRgb.r}, ${rp.lightRgb.g}, ${rp.lightRgb.b}, 0.24)`);
+          gradient.addColorStop(0.82, `rgba(${rp.lightRgb.r}, ${rp.lightRgb.g}, ${rp.lightRgb.b}, 0.62)`);
+          gradient.addColorStop(1, `rgba(${rp.lightRgb.r}, ${rp.lightRgb.g}, ${rp.lightRgb.b}, 0.95)`);
+        } else {
+          gradient.addColorStop(0, `rgba(${rp.colorRgb.r}, ${rp.colorRgb.g}, ${rp.colorRgb.b}, 0)`);
+          gradient.addColorStop(0.45, `rgba(${rp.colorRgb.r}, ${rp.colorRgb.g}, ${rp.colorRgb.b}, 0.22)`);
+          gradient.addColorStop(0.82, `rgba(${rp.colorRgb.r}, ${rp.colorRgb.g}, ${rp.colorRgb.b}, 0.7)`);
+          gradient.addColorStop(1, `rgba(${rp.colorRgb.r}, ${rp.colorRgb.g}, ${rp.colorRgb.b}, 1)`);
+        }
+        cometCtx.globalAlpha = 1;
+        cometCtx.strokeStyle = gradient;
+        cometCtx.lineWidth = Math.max(1.2, rp.size * 0.5);
         cometCtx.beginPath();
-        let hasTailPath = false;
-        for (let step = rp.tail.length - 1; step >= 0; step--) {
-          const segment = rp.tail[step];
-          const progress = headProgress - segment.offset;
-          if (progress < 0) continue;
+        const tailSamples = Math.max(10, Math.min(22, rp.tail.length));
+        for (let step = 0; step <= tailSamples; step++) {
+          const progress = startProgress + (headProgress - startProgress) * (step / tailSamples);
           const p = sampleAt(rp, progress);
-          if (!hasTailPath) {
+          if (step === 0) {
             cometCtx.moveTo(p.x, p.y);
-            hasTailPath = true;
           } else {
             cometCtx.lineTo(p.x, p.y);
           }
         }
-        if (hasTailPath) {
-          const head = sampleAt(rp, headProgress);
-          cometCtx.lineTo(head.x, head.y);
-          cometCtx.stroke();
-        }
-        for (let step = rp.tail.length - 1; step >= 0; step--) {
-          const segment = rp.tail[step];
-          const progress = headProgress - segment.offset;
-          if (progress < 0) continue;
-          const p1 = sampleAt(rp, progress);
-          const p2 = sampleAt(rp, Math.min(headProgress, progress + rp.gap * 1.65));
-          cometCtx.globalAlpha = segment.alpha;
-          cometCtx.lineWidth = segment.width;
-          cometCtx.beginPath();
-          cometCtx.moveTo(p1.x, p1.y);
-          cometCtx.lineTo(p2.x, p2.y);
-          cometCtx.stroke();
-        }
-        const head = sampleAt(rp, headProgress);
+        cometCtx.stroke();
         cometCtx.globalAlpha = 1;
         cometCtx.fillStyle = isLight
           ? `rgb(${rp.lightRgb.r}, ${rp.lightRgb.g}, ${rp.lightRgb.b})`
