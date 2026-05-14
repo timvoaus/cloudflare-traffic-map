@@ -186,13 +186,9 @@ body {
 
 .arc-path {
   fill: none;
-  stroke-width: 1.2px;
   stroke-linecap: round;
-  opacity: 0.18;
-  filter: drop-shadow(0 0 1px currentColor);
-  transition: opacity 0.15s, stroke-width 0.15s;
+  pointer-events: stroke;
 }
-.arc-path:hover { opacity: 0.55; stroke-width: 1.8px; }
 
 /* ── Data-transfer flow animation ──────────────────────────────
    Dotted stream drawn on top of every arc, flowing origin → destination.
@@ -206,40 +202,16 @@ body {
 }
 .arc-comet-head {
   filter:
-    drop-shadow(0 0 2px #fff)
-    drop-shadow(0 0 8px var(--comet-color))
-    drop-shadow(0 0 18px var(--comet-color));
+    drop-shadow(0 0 3px var(--comet-color))
+    drop-shadow(0 0 9px var(--comet-color))
+    drop-shadow(0 0 16px var(--comet-color));
 }
 .arc-comet-tail {
-  filter: drop-shadow(0 0 4px var(--comet-color));
-}
-.destination-spark {
-  opacity: 0.75;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  filter:
-    drop-shadow(0 0 3px var(--spark-color))
-    drop-shadow(0 0 7px var(--spark-color));
-  animation: spark-twinkle 1.8s ease-in-out infinite;
-}
-@keyframes spark-twinkle {
-  0%, 100% {
-    opacity: 0.15;
-    transform: scale(0.55);
-  }
-  42% {
-    opacity: 0.95;
-    transform: scale(1.45);
-  }
-  70% {
-    opacity: 0.35;
-    transform: scale(0.8);
-  }
+  filter: drop-shadow(0 0 5px var(--comet-color));
 }
 @media (prefers-reduced-motion: reduce) {
   .arc-comet-head,
-  .arc-comet-tail,
-  .destination-spark { opacity: 0.35; animation: none; }
+  .arc-comet-tail { opacity: 0.35; }
 }
 
 /* Origin pins — fill colour is set inline per origin country. */
