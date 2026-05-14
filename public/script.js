@@ -469,8 +469,19 @@
         });
       } catch { return ''; }
     };
+    const range = data.dataRange;
     const win = data.lastRefresh && data.lastRefresh.window;
-    if (win && win.from && win.to) {
+    if (range && range.oldest && range.latest) {
+      updatedBadge.textContent = `Data: ${fmtShort(range.oldest)} → ${fmtShort(range.latest)}`;
+      const refreshedAt = (data.lastRefresh && data.lastRefresh.updatedAt) || data.updatedAt;
+      const lines = [
+        'Data span stored in D1',
+        `Oldest: ${range.oldest}`,
+        `Latest: ${range.latest}`,
+      ];
+      if (refreshedAt) lines.push(`Last refreshed: ${new Date(refreshedAt).toLocaleString()}`);
+      updatedBadge.title = lines.join('\n');
+    } else if (win && win.from && win.to) {
       updatedBadge.textContent = `Data: ${fmtShort(win.from)} → ${fmtShort(win.to)}`;
       const refreshedAt = data.lastRefresh.updatedAt || data.updatedAt;
       updatedBadge.title = refreshedAt
