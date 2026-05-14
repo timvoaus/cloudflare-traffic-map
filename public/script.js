@@ -110,23 +110,9 @@
     svg.attr('viewBox', `0 0 ${width} ${height}`)
        .attr('preserveAspectRatio', 'xMidYMid meet');
 
-    const widthScale = width / (2 * Math.PI);
-    const heightScale = height / Math.PI;
-    const compactView = Math.min(width, height) < 640;
-    const portrait = height > width;
-    let fitScale = Math.min(widthScale, heightScale);
-    let centerY = height / 2;
-    if (compactView && portrait) {
-      // Zoom in a bit so the world fills the viewport instead of leaving
-      // big empty bands above/below on phones. Crop a small amount of the
-      // less-populated polar regions and bias toward the northern hemisphere
-      // where most landmass and traffic data lives.
-      fitScale = Math.min(widthScale * 1.55, heightScale * 1.1);
-      centerY = height * 0.55;
-    }
     projection = d3.geoEquirectangular()
-      .scale(fitScale)
-      .translate([width / 2, centerY]);
+      .scale(width / 6.45)
+      .translate([width / 2, height / 1.9]);
     pathGen = d3.geoPath(projection);
     svg.selectAll('*').remove();
     rootGroup = svg.append('g').attr('class', 'root');
