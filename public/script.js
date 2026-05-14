@@ -25,6 +25,15 @@
   const escapeHtml = v => String(v ?? '').replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const countryLabel = code => COUNTRY_NAMES[code] || code || 'Unknown';
+  const hexToRgb = hex => {
+    const h = hex.replace('#', '');
+    const value = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+    return { r: value >> 16 & 255, g: value >> 8 & 255, b: value & 255 };
+  };
+  const rgba = (hex, alpha = 1) => {
+    const c = hexToRgb(hex);
+    return `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`;
+  };
 
   let projection, pathGen, zoomBehavior, rootGroup;
   let cometTimer;
@@ -186,6 +195,7 @@
         start: performance.now() - routeIndex * 230,
         duration: flowSpeed(route.count) * 1000,
         color: originColor(route.sourceCountry),
+        colorRgb: hexToRgb(originColor(route.sourceCountry)),
         tail,
         gap,
         size,
@@ -201,18 +211,21 @@
       };
     };
     cometTimer = d3.timer(now => {
+      const isLight = document.documentElement.dataset.theme === 'light';
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       cometCtx.setTransform(1, 0, 0, 1, 0, 0);
       cometCtx.clearRect(0, 0, cometCanvas.width, cometCanvas.height);
       cometCtx.setTransform(dpr * currentZoom.k, 0, 0, dpr * currentZoom.k, dpr * currentZoom.x, dpr * currentZoom.y);
-      cometCtx.globalCompositeOperation = 'lighter';
+      cometCtx.globalCompositeOperation = isLight ? 'multiply' : 'lighter';
       cometCtx.lineCap = 'round';
       for (let i = 0; i < routePaths.length; i++) {
         const rp = routePaths[i];
         const headProgress = ((now - rp.start) / rp.duration) % 1;
-        cometCtx.strokeStyle = rp.color;
-        cometCtx.shadowColor = rp.color;
-        cometCtx.shadowBlur = 0;
+        cometCtx.strokeStyle = isLight
+          ? `rgba(${rp.colorRgb.r}, ${rp.colorRgb.g}, ${rp.colorRgb.b}, 0.95)`
+          : rp.color;
+        cometCtx.shadowColor = isLight ? rgba(rp.color, 0.45) : rp.color;
+        cometCtx.shadowBlur = isLight ? 1.4 : 0;
         for (let step = rp.tail.length - 1; step >= 0; step--) {
           const segment = rp.tail[step];
           const progress = headProgress - segment.offset;
@@ -228,9 +241,11 @@
         }
         const head = sampleAt(rp, headProgress);
         cometCtx.globalAlpha = 1;
-        cometCtx.fillStyle = rp.color;
-        cometCtx.shadowColor = rp.color;
-        cometCtx.shadowBlur = rp.size * 2.2;
+        cometCtx.fillStyle = isLight
+          ? `rgba(${rp.colorRgb.r}, ${rp.colorRgb.g}, ${rp.colorRgb.b}, 0.98)`
+          : rp.color;
+        cometCtx.shadowColor = isLight ? rgba(rp.color, 0.55) : rp.color;
+        cometCtx.shadowBlur = rp.size * (isLight ? 1.15 : 2.2);
         cometCtx.beginPath();
         cometCtx.arc(head.x, head.y, rp.size, 0, Math.PI * 2);
         cometCtx.fill();

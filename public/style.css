@@ -184,6 +184,10 @@ body {
   mix-blend-mode: screen;
 }
 
+[data-theme="light"] #comet-canvas {
+  mix-blend-mode: multiply;
+}
+
 .country {
   fill: var(--map-land);
   stroke: var(--map-land-stroke);
