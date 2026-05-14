@@ -209,6 +209,7 @@
       .attr('opacity', d => d.step === 0 ? 1 : d.baseOpacity);
 
     const cometNodes = flowEnter.merge(flowSel).nodes();
+    const visibleState = new Uint8Array(cometNodes.length).fill(1);
     cometTimer = d3.timer(now => {
       for (let i = 0; i < cometNodes.length; i++) {
         const node = cometNodes[i];
@@ -217,10 +218,16 @@
         const headProgress = ((now - rp.start) / rp.duration) % 1;
         const progress = headProgress - d.progressOffset;
         if (progress < 0) {
-          if (node.getAttribute('opacity') !== '0') node.setAttribute('opacity', '0');
+          if (visibleState[i] !== 0) {
+            node.setAttribute('opacity', '0');
+            visibleState[i] = 0;
+          }
           continue;
         }
-        node.setAttribute('opacity', d.baseOpacity);
+        if (visibleState[i] !== 1) {
+          node.setAttribute('opacity', d.baseOpacity);
+          visibleState[i] = 1;
+        }
         const f1 = progress * rp.sampleCount;
         const i1 = f1 | 0;
         const fr1 = f1 - i1;
