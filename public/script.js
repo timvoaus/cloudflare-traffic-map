@@ -36,7 +36,7 @@
   function setupMap(width, height) {
     canvasWidth = width;
     canvasHeight = height;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     cometCanvas.width = Math.round(width * dpr);
     cometCanvas.height = Math.round(height * dpr);
     svg.attr('viewBox', `0 0 ${width} ${height}`)
@@ -150,9 +150,9 @@
 
     rootGroup.select('.arc-flows-layer').selectAll('*').remove();
     const flowSpeed = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([8.5, 1.9]);
-    const tailScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([12, 22]);
-    const tailGapScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([0.026, 0.04]);
-    const cometSize = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([2.6, 7.4]);
+    const tailScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([10, 18]);
+    const tailGapScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([0.03, 0.048]);
+    const cometSize = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([2.8, 7.8]);
     const routePaths = routes.map((route, routeIndex) => {
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', curvedArc(
@@ -167,6 +167,18 @@
         xs[i] = pt.x;
         ys[i] = pt.y;
       }
+      const tailSteps = Math.round(tailScale(route.count));
+      const gap = tailGapScale(route.count);
+      const size = cometSize(route.count);
+      const tail = Array.from({ length: tailSteps }, (_, idx) => {
+        const step = idx + 1;
+        const fade = 1 - step / (tailSteps + 1);
+        return {
+          offset: step * gap,
+          width: Math.max(0.9, size * 0.5 * Math.pow(fade, 0.95)),
+          alpha: Math.max(0.04, 0.78 * Math.pow(fade, 1.85)),
+        };
+      });
       return {
         xs,
         ys,
@@ -174,9 +186,9 @@
         start: performance.now() - routeIndex * 230,
         duration: flowSpeed(route.count) * 1000,
         color: originColor(route.sourceCountry),
-        tailSteps: Math.round(tailScale(route.count)),
-        gap: tailGapScale(route.count),
-        size: cometSize(route.count),
+        tail,
+        gap,
+        size,
       };
     });
     const sampleAt = (routePath, t) => {
@@ -189,7 +201,7 @@
       };
     };
     cometTimer = d3.timer(now => {
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       cometCtx.setTransform(1, 0, 0, 1, 0, 0);
       cometCtx.clearRect(0, 0, cometCanvas.width, cometCanvas.height);
       cometCtx.setTransform(dpr * currentZoom.k, 0, 0, dpr * currentZoom.k, dpr * currentZoom.x, dpr * currentZoom.y);
@@ -201,14 +213,14 @@
         cometCtx.strokeStyle = rp.color;
         cometCtx.shadowColor = rp.color;
         cometCtx.shadowBlur = 0;
-        for (let step = rp.tailSteps; step >= 1; step--) {
-          const progress = headProgress - step * rp.gap;
+        for (let step = rp.tail.length - 1; step >= 0; step--) {
+          const segment = rp.tail[step];
+          const progress = headProgress - segment.offset;
           if (progress < 0) continue;
-          const fade = 1 - step / (rp.tailSteps + 1);
           const p1 = sampleAt(rp, progress);
           const p2 = sampleAt(rp, Math.min(headProgress, progress + rp.gap * 0.94));
-          cometCtx.globalAlpha = Math.max(0.04, 0.78 * Math.pow(fade, 1.85));
-          cometCtx.lineWidth = Math.max(0.9, rp.size * 0.5 * Math.pow(fade, 0.95));
+          cometCtx.globalAlpha = segment.alpha;
+          cometCtx.lineWidth = segment.width;
           cometCtx.beginPath();
           cometCtx.moveTo(p1.x, p1.y);
           cometCtx.lineTo(p2.x, p2.y);
