@@ -88,6 +88,25 @@ export const COUNTRY_CENTROIDS = {
   VG: [18.4207, -64.6400],   VI: [18.3358, -64.8963],  WF: [-13.7687, -177.1561],
   YT: [-12.8275, 45.1662],
 
+  // ── ISO 3166-1 alpha-2 exceptional reservations ──
+  // Codes reserved by ISO for entities that can appear in real-world data.
+  AC: [-7.9467, -14.3559],   // Ascension Island
+  CP: [10.2833, -109.2167],  // Clipperton Island
+  DG: [-7.3133, 72.4111],    // Diego Garcia
+  EA: [35.8894, -5.3213],    // Ceuta & Melilla (Spanish exclaves)
+  IC: [28.2916, -16.6291],   // Canary Islands
+  TA: [-37.1052, -12.2777],  // Tristan da Cunha
+
+  // ── Historical / aliased codes still seen in logs ──
+  UK: [55.3781, -3.4360],    // alias for GB (United Kingdom)
+  AN: [12.2261, -69.0600],   // Netherlands Antilles (dissolved 2010)
+  CS: [44.0165, 21.0059],    // Serbia & Montenegro (former)
+  YU: [44.0165, 21.0059],    // Yugoslavia (former)
+  SU: [61.5240, 105.3188],   // Soviet Union (former)
+  TP: [-8.8742, 125.7275],   // East Timor (now TL)
+  ZR: [-4.0383, 21.7587],    // Zaire (now CD)
+  BU: [21.9162, 95.9560],    // Burma (now MM)
+
   // ── Cloudflare-specific / regional / unresolved codes ──
   // Cloudflare may emit pseudo country codes that don't map to a real
   // ISO 3166-1 alpha-2 country. We give each a stable visual location so

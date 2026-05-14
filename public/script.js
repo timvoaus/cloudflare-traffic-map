@@ -13,6 +13,11 @@
     EU: 'European Union', AP: 'Asia / Pacific',
     T1: 'Tor network', A1: 'Anonymous proxy', A2: 'Satellite provider',
     O1: 'Other / unspecified', XX: 'Unknown',
+    AC: 'Ascension Island', CP: 'Clipperton Island', DG: 'Diego Garcia',
+    EA: 'Ceuta & Melilla', IC: 'Canary Islands', TA: 'Tristan da Cunha',
+    UK: 'United Kingdom', AN: 'Netherlands Antilles',
+    CS: 'Serbia & Montenegro', YU: 'Yugoslavia', SU: 'Soviet Union',
+    TP: 'East Timor', ZR: 'Zaire', BU: 'Burma',
   };
 
   const svgEl = document.getElementById('world-map');
