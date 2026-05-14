@@ -251,11 +251,7 @@
         y: routePath.ys[i] + (routePath.ys[i + 1] - routePath.ys[i]) * frac,
       };
     };
-    let lastCometFrame = 0;
-    const cometFrameInterval = 16;
-    cometTimer = d3.timer(now => {
-      if (document.hidden || now - lastCometFrame < cometFrameInterval) return;
-      lastCometFrame = now;
+    const drawComets = now => {
       const isLight = document.documentElement.dataset.theme === 'light';
       const dpr = Math.min(window.devicePixelRatio || 1, isCompactView ? 1.25 : 1.5);
       cometCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -315,6 +311,15 @@
       cometCtx.globalAlpha = 1;
       cometCtx.globalCompositeOperation = 'source-over';
       cometCtx.shadowBlur = 0;
+    };
+
+    let lastCometFrame = 0;
+    const cometFrameInterval = 16;
+    requestAnimationFrame(() => drawComets(performance.now()));
+    cometTimer = d3.timer(now => {
+      if (document.hidden || now - lastCometFrame < cometFrameInterval) return;
+      lastCometFrame = now;
+      drawComets(now);
     });
 
     // Destination bubbles
