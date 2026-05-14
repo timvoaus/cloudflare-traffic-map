@@ -87,4 +87,16 @@ export const COUNTRY_CENTROIDS = {
   TF: [-49.2804, 69.3486],   TK: [-8.9676, -171.8559], UM: [19.2823, 166.6470],
   VG: [18.4207, -64.6400],   VI: [18.3358, -64.8963],  WF: [-13.7687, -177.1561],
   YT: [-12.8275, 45.1662],
+
+  // ── Cloudflare-specific / regional / unresolved codes ──
+  // Cloudflare may emit pseudo country codes that don't map to a real
+  // ISO 3166-1 alpha-2 country. We give each a stable visual location so
+  // they still appear on the map instead of being dropped.
+  EU: [50.0000, 10.0000],    // European Union (region)
+  AP: [10.0000, 120.0000],   // Asia/Pacific region
+  T1: [-38.0000, -25.0000],  // Tor exit node
+  A1: [-40.0000, -20.0000],  // Anonymous proxy
+  A2: [-42.0000, -15.0000],  // Satellite provider
+  O1: [-44.0000, -10.0000],  // "Other" country
+  XX: [-46.0000, -5.0000],   // Unknown country
 };

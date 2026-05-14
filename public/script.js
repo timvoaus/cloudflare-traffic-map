@@ -10,6 +10,9 @@
     PL: 'Poland', SE: 'Sweden', NO: 'Norway', FI: 'Finland', DK: 'Denmark',
     CH: 'Switzerland', BE: 'Belgium', AT: 'Austria', PT: 'Portugal', GR: 'Greece',
     CZ: 'Czechia', UA: 'Ukraine', RO: 'Romania', NZ: 'New Zealand', IS: 'Iceland',
+    EU: 'European Union', AP: 'Asia / Pacific',
+    T1: 'Tor network', A1: 'Anonymous proxy', A2: 'Satellite provider',
+    O1: 'Other / unspecified', XX: 'Unknown',
   };
 
   const svgEl = document.getElementById('world-map');
