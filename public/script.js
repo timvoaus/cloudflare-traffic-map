@@ -129,18 +129,18 @@
         { lat: d.destinationLat, lng: d.destinationLng }))
       .attr('stroke', d => originColor(d.sourceCountry))
       .attr('stroke-width', d => arcW(d.count))
-      .attr('opacity', d => arcOpacity(d.count));
+      .attr('opacity', d => arcOpacity(d.count) * 0.42);
 
     // Flow overlay — dotted "data packets" moving origin → destination.
     // One faster-moving stream per route, coloured to match the origin.
     const flowSpeed = d3.scaleSqrt().domain([1, maxRoute]).range([8, 2.8]); // seconds; busier = faster
-    const tailSteps = 8;
+    const tailSteps = 18;
     const cometParticles = routes.flatMap((route, routeIndex) =>
       d3.range(tailSteps + 1).map(step => ({
         ...route,
         routeIndex,
         step,
-        progressOffset: step * 0.026,
+        progressOffset: step * 0.018,
       })));
     const flowSel = rootGroup.select('.arc-flows-layer')
       .selectAll('circle')
@@ -154,8 +154,8 @@
       .attr('class', d => d.step === 0 ? 'arc-comet-head' : 'arc-comet-tail')
       .attr('fill', d => originColor(d.sourceCountry))
       .style('--comet-color', d => originColor(d.sourceCountry))
-      .attr('r', d => Math.max(1.1, arcW(d.count) * (d.step === 0 ? 0.82 : 0.45 * (1 - d.step / (tailSteps + 1)))))
-      .attr('opacity', d => d.step === 0 ? 1 : Math.max(0.08, 0.55 * (1 - d.step / (tailSteps + 1))))
+      .attr('r', d => Math.max(0.45, arcW(d.count) * (d.step === 0 ? 0.82 : 0.4 * Math.pow(1 - d.step / (tailSteps + 1), 1.25))))
+      .attr('opacity', d => d.step === 0 ? 1 : Math.max(0.025, 0.68 * Math.pow(1 - d.step / (tailSteps + 1), 1.8)))
       .each(function(d) {
         const el = d3.select(this);
         const start = performance.now() - d.routeIndex * 230 - d.step * 95;
