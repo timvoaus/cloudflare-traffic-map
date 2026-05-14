@@ -34,11 +34,14 @@
     const c = hexToRgb(hex);
     return `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`;
   };
-  const darkenRgb = (color, factor = 0.62) => ({
-    r: Math.round(color.r * factor),
-    g: Math.round(color.g * factor),
-    b: Math.round(color.b * factor),
-  });
+  const lightModeRgb = (color, saturation = 1.18, brightness = 0.92) => {
+    const avg = (color.r + color.g + color.b) / 3;
+    return {
+      r: Math.round(Math.min(255, (avg + (color.r - avg) * saturation) * brightness)),
+      g: Math.round(Math.min(255, (avg + (color.g - avg) * saturation) * brightness)),
+      b: Math.round(Math.min(255, (avg + (color.b - avg) * saturation) * brightness)),
+    };
+  };
 
   let projection, pathGen, zoomBehavior, rootGroup;
   let cometTimer;
@@ -201,7 +204,7 @@
         duration: flowSpeed(route.count) * 1000,
         color: originColor(route.sourceCountry),
         colorRgb: hexToRgb(originColor(route.sourceCountry)),
-        lightRgb: darkenRgb(hexToRgb(originColor(route.sourceCountry))),
+        lightRgb: lightModeRgb(hexToRgb(originColor(route.sourceCountry))),
         tail,
         gap,
         size,
