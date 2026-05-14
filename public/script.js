@@ -208,7 +208,9 @@
         xs,
         ys,
         sampleCount,
-        start: performance.now() - routeIndex * 230,
+        // Random initial phase so comets are visible along the full path
+        // immediately after refresh instead of all clustered at the source.
+        start: performance.now() - Math.random() * flowSpeed(route.count) * 1000,
         duration: flowSpeed(route.count) * 1000,
         color: originColor(route.sourceCountry),
         colorRgb: hexToRgb(originColor(route.sourceCountry)),
@@ -341,16 +343,15 @@
     srcMerge.select('path.origin-pin-body')
       .attr('fill', d => originColor(d.country));
 
-    // Origins legend (top origins with their colors + share)
+    // Legend — origins + scrollable destinations list
     const legendEl = document.getElementById('route-legend');
     const legendListEl = document.getElementById('route-legend-list');
-    const legendTitleEl = document.querySelector('.route-legend-title');
+    const destListEl = document.getElementById('dest-legend-list');
     if (legendEl && legendListEl) {
-      if (sources.length === 0) {
+      if (sources.length === 0 && destinations.length === 0) {
         legendEl.hidden = true;
       } else {
         legendEl.hidden = false;
-        if (legendTitleEl) legendTitleEl.textContent = 'Origin countries';
         const totalSrc = sources.reduce((s, d) => s + (d.count || 0), 0) || 1;
         legendListEl.innerHTML = sources.slice(0, 14).map(s => {
           const color = originColor(s.country);
@@ -362,6 +363,19 @@
             <span class="route-legend-count">${formatNumber(s.count)} (${pct}%)</span>
           </div>`;
         }).join('');
+
+        if (destListEl) {
+          const totalDst = destinations.reduce((s, d) => s + (d.count || 0), 0) || 1;
+          destListEl.innerHTML = destinations.map(d => {
+            const pct = ((d.count / totalDst) * 100).toFixed(d.count / totalDst >= 0.1 ? 0 : 1);
+            const label = countryLabel(d.country);
+            return `<div class="route-legend-item" title="${escapeHtml(label)}">
+              <span class="route-legend-swatch dest-swatch"></span>
+              <span class="route-legend-pair">${escapeHtml(d.country)} · ${escapeHtml(label)}</span>
+              <span class="route-legend-count">${formatNumber(d.count)} (${pct}%)</span>
+            </div>`;
+          }).join('');
+        }
       }
     }
 

@@ -403,8 +403,34 @@ html[data-theme="light"] .origin-pin .origin-pin-body {
 .route-legend-list {
   display: grid;
   gap: 4px;
-  max-height: 220px;
+  max-height: 200px;
   overflow-y: auto;
+}
+.route-legend-list.dest-legend-list {
+  max-height: 220px;
+}
+.route-legend-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 8px 0;
+}
+.route-legend-subtitle {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.route-legend-swatch.dest-swatch {
+  background: var(--blue);
+  box-shadow: 0 0 4px var(--blue);
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+}
+html[data-theme="light"] .route-legend-divider {
+  background: rgba(0,0,0,0.08);
 }
 .route-legend-item {
   display: flex;
