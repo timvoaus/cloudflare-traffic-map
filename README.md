@@ -31,8 +31,26 @@ paste values when asked, and click a few things in the Cloudflare dashboard.
 
 1. A [Cloudflare account](https://dash.cloudflare.com/sign-up).
 2. [Node.js 18 or newer](https://nodejs.org/).
-3. This project downloaded or cloned to your computer.
-4. Access to the Cloudflare account that has your Zero Trust logs.
+3. Access to the Cloudflare account that has your Zero Trust logs.
+
+### Step 0: Download this project
+
+You need this project on your computer before running the setup commands.
+
+#### Option A: Download ZIP
+
+1. Open this GitHub repository in your browser.
+2. Click **Code**.
+3. Click **Download ZIP**.
+4. Extract the ZIP file.
+5. Open PowerShell inside the extracted folder.
+
+#### Option B: Use Git
+
+```powershell
+git clone https://github.com/timvoaus/cloudflare-traffic-map.git
+cd cloudflare-traffic-map
+```
 
 ### Step 1: Install the project
 
