@@ -137,7 +137,7 @@
     const tailScale = d3.scaleSqrt().domain([1, maxRoute]).range([22, 38]);
     const tailGapScale = d3.scaleSqrt().domain([1, maxRoute]).range([0.019, 0.03]);
     const cometSize = d3.scaleSqrt().domain([1, maxRoute]).range([1.35, 4.8]);
-    const cometParticles = routes.flatMap((route, routeIndex) =>
+    const cometParts = routes.flatMap((route, routeIndex) =>
       d3.range(Math.round(tailScale(route.count)) + 1).map(step => {
         const tailSteps = Math.round(tailScale(route.count));
         const fade = 1 - step / (tailSteps + 1);
@@ -151,22 +151,30 @@
         };
       }));
     const flowSel = rootGroup.select('.arc-flows-layer')
-      .selectAll('circle')
-      .data(cometParticles, r => `${r.sourceCountry}->${r.destinationCountry}:${r.step}`);
+      .selectAll('circle, line')
+      .data(cometParts, r => `${r.sourceCountry}->${r.destinationCountry}:${r.step}`);
     flowSel.exit().remove();
-    const flowEnter = flowSel.enter().append('circle')
-      .attr('class', d => d.step === 0 ? 'arc-comet-head' : 'arc-comet-tail')
+    const flowEnter = flowSel.enter().append(d => document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      d.step === 0 ? 'circle' : 'line'))
+      .attr('class', d => d.step === 0 ? 'arc-comet-head' : 'arc-comet-streak')
       .attr('pointer-events', 'none');
 
     flowEnter.merge(flowSel)
-      .attr('class', d => d.step === 0 ? 'arc-comet-head' : 'arc-comet-tail')
-      .attr('fill', d => originColor(d.sourceCountry))
+      .attr('class', d => d.step === 0 ? 'arc-comet-head' : 'arc-comet-streak')
+      .attr('fill', d => d.step === 0 ? originColor(d.sourceCountry) : 'none')
+      .attr('stroke', d => d.step === 0 ? null : originColor(d.sourceCountry))
       .style('--comet-color', d => originColor(d.sourceCountry))
       .attr('r', d => {
         const fade = 1 - d.step / (d.tailSteps + 1);
-        return d.step === 0 ? cometSize(d.count) : Math.max(0.42, cometSize(d.count) * 0.5 * Math.pow(fade, 1.25));
+        return d.step === 0 ? cometSize(d.count) : null;
       })
-      .attr('opacity', d => d.baseOpacity)
+      .attr('stroke-width', d => {
+        if (d.step === 0) return null;
+        const fade = 1 - d.step / (d.tailSteps + 1);
+        return Math.max(0.65, cometSize(d.count) * 0.42 * Math.pow(fade, 0.95));
+      })
+      .attr('opacity', d => d.step === 0 ? 1 : d.baseOpacity)
       .each(function(d) {
         const el = d3.select(this);
         const start = performance.now() - d.routeIndex * 230;
@@ -186,7 +194,13 @@
           }
           el.attr('opacity', d.baseOpacity);
           const p = path.getPointAtLength(length * progress);
-          el.attr('cx', p.x).attr('cy', p.y);
+          if (d.step === 0) {
+            el.attr('cx', p.x).attr('cy', p.y);
+            return;
+          }
+          const nextProgress = Math.min(headProgress, progress + tailGapScale(d.count) * 0.92);
+          const next = path.getPointAtLength(length * nextProgress);
+          el.attr('x1', p.x).attr('y1', p.y).attr('x2', next.x).attr('y2', next.y);
         });
       });
 

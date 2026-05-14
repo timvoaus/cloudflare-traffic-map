@@ -196,7 +196,7 @@ body {
    one full dash+gap, giving a seamless loop regardless of the arc length.
    Stroke colour + animation-duration are set inline by script.js. */
 .arc-comet-head,
-.arc-comet-tail {
+.arc-comet-streak {
   pointer-events: none;
   mix-blend-mode: screen;
 }
@@ -206,12 +206,15 @@ body {
     drop-shadow(0 0 9px var(--comet-color))
     drop-shadow(0 0 16px var(--comet-color));
 }
-.arc-comet-tail {
-  filter: drop-shadow(0 0 5px var(--comet-color));
+.arc-comet-streak {
+  stroke-linecap: round;
+  filter:
+    drop-shadow(0 0 3px var(--comet-color))
+    drop-shadow(0 0 8px var(--comet-color));
 }
 @media (prefers-reduced-motion: reduce) {
   .arc-comet-head,
-  .arc-comet-tail { opacity: 0.35; }
+  .arc-comet-streak { opacity: 0.35; }
 }
 
 /* Origin pins — fill colour is set inline per origin country. */
