@@ -553,6 +553,8 @@ html[data-theme="light"] .map-key {
     bottom: calc(0.75rem + env(safe-area-inset-bottom));
     width: auto;
     max-width: none;
+    max-height: min(42vh, 260px);
+    overflow: hidden auto;
     padding: 0.55rem 0.65rem;
     font-size: 0.68rem;
   }
@@ -617,11 +619,24 @@ html[data-theme="light"] .map-key {
 
   .route-legend {
     right: 4rem;
-    max-height: 150px;
+    max-height: min(28vh, 190px);
+    padding: 0.5rem 0.6rem;
   }
 
   .route-legend-title {
     margin-bottom: 0.35rem;
+  }
+
+  .route-legend-list {
+    max-height: 72px;
+  }
+
+  .route-legend-list.dest-legend-list {
+    max-height: 82px;
+  }
+
+  .route-legend-divider {
+    margin: 0.45rem 0;
   }
 
   .map-key {
