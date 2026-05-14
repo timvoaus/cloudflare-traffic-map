@@ -166,7 +166,7 @@
       .attr('opacity', 0);
 
     rootGroup.select('.arc-flows-layer').selectAll('*').remove();
-    const flowSpeed = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([8.5, 1.9]);
+    const flowSpeed = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([8.5, 2.7]);
     const tailScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([10, 18]);
     const tailGapScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([0.03, 0.048]);
     const cometSize = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([2.8, 7.8]);
