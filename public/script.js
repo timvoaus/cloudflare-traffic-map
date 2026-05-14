@@ -138,9 +138,19 @@
     const maxDest = Math.max(1, ...destinations.map(d => d.count));
     const maxSrc  = Math.max(1, ...sources.map(s => s.count));
     const maxRoute = Math.max(1, ...routes.map(r => r.count));
-    const destR = d3.scaleSqrt().domain([1, maxDest]).range([4, 22]);
-    const srcR  = d3.scaleSqrt().domain([1, maxSrc]).range([6, 18]);
-    const arcW  = d3.scaleSqrt().domain([1, maxRoute]).range([1.2, 3.2]);
+    const viewMin = Math.max(280, Math.min(canvasWidth || 960, canvasHeight || 520));
+    const mobileFactor = Math.max(0.58, Math.min(1, viewMin / 640));
+    const destMin = Math.max(2.8, 4 * mobileFactor);
+    const destMax = Math.min(22, Math.max(9, viewMin * 0.032));
+    const pinMin = Math.max(0.58, 0.85 * mobileFactor);
+    const pinMax = Math.min(1.55, Math.max(0.95, viewMin * 0.00235));
+    const arcMin = Math.max(0.75, 1.2 * mobileFactor);
+    const arcMax = Math.min(3.2, Math.max(1.65, viewMin * 0.0048));
+    const cometMin = Math.max(1.7, 2.8 * mobileFactor);
+    const cometMax = Math.min(7.8, Math.max(3.8, viewMin * 0.0115));
+    const destR = d3.scaleSqrt().domain([1, maxDest]).range([destMin, destMax]);
+    const srcR  = d3.scaleSqrt().domain([1, maxSrc]).range([6 * mobileFactor, 18 * mobileFactor]);
+    const arcW  = d3.scaleSqrt().domain([1, maxRoute]).range([arcMin, arcMax]);
     const arcOpacity = d3.scaleSqrt().domain([1, maxRoute]).range([0.55, 0.95]);
 
     // One color per ORIGIN country — every arc and pin from that origin
@@ -175,9 +185,15 @@
 
     rootGroup.select('.arc-flows-layer').selectAll('*').remove();
     const flowSpeed = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([3.4, 8.8]);
-    const tailScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([16, 28]);
-    const tailGapScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([0.018, 0.03]);
-    const cometSize = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([2.8, 7.8]);
+    const tailScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([
+      Math.round(12 + 4 * mobileFactor),
+      Math.round(18 + 10 * mobileFactor),
+    ]);
+    const tailGapScale = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([
+      0.014 + 0.004 * mobileFactor,
+      0.022 + 0.008 * mobileFactor,
+    ]);
+    const cometSize = d3.scalePow().exponent(0.35).domain([1, maxRoute]).range([cometMin, cometMax]);
     const routePaths = routes.map((route, routeIndex) => {
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', curvedArc(
@@ -310,7 +326,7 @@
     // Pin path: tip at (0,0), head extending upward. Lucide MapPin shape,
     // re-centered so transform-translate places the tip on the country point.
     const pinPath = 'M0 0 C 0 0 -10 -8 -10 -16 A 10 10 0 1 1 10 -16 C 10 -8 0 0 0 0 Z';
-    const pinSize = d3.scaleSqrt().domain([1, maxSrc]).range([0.85, 1.55]);
+    const pinSize = d3.scaleSqrt().domain([1, maxSrc]).range([pinMin, pinMax]);
 
     const srcSel = rootGroup.select('.origin-layer')
       .selectAll('g.origin-pin')
