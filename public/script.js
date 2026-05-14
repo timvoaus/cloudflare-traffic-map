@@ -25,6 +25,7 @@
   const countryLabel = code => COUNTRY_NAMES[code] || code || 'Unknown';
 
   let projection, pathGen, zoomBehavior, rootGroup;
+  let cometTimer;
   const svg = d3.select(svgEl);
 
   function setupMap(width, height) {
@@ -87,6 +88,10 @@
   }
 
   function render(data) {
+    if (cometTimer) {
+      cometTimer.stop();
+      cometTimer = null;
+    }
     const sources = (data.sources || []).filter(s => s.lat != null && s.lng != null);
     const destinations = (data.destinations || []).filter(d => d.lat != null && d.lng != null);
     const routes = (data.routes || [])
@@ -137,12 +142,28 @@
     const tailScale = d3.scaleSqrt().domain([1, maxRoute]).range([22, 38]);
     const tailGapScale = d3.scaleSqrt().domain([1, maxRoute]).range([0.019, 0.03]);
     const cometSize = d3.scaleSqrt().domain([1, maxRoute]).range([1.35, 4.8]);
+    const routePaths = new Map();
+    routes.forEach((route, routeIndex) => {
+      const key = `${route.sourceCountry}->${route.destinationCountry}`;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', curvedArc(
+        { lat: route.sourceLat, lng: route.sourceLng },
+        { lat: route.destinationLat, lng: route.destinationLng }));
+      routePaths.set(key, {
+        path,
+        length: path.getTotalLength(),
+        start: performance.now() - routeIndex * 230,
+        duration: flowSpeed(route.count) * 1000,
+      });
+    });
     const cometParts = routes.flatMap((route, routeIndex) =>
       d3.range(Math.round(tailScale(route.count)) + 1).map(step => {
         const tailSteps = Math.round(tailScale(route.count));
         const fade = 1 - step / (tailSteps + 1);
+        const routeKey = `${route.sourceCountry}->${route.destinationCountry}`;
         return {
           ...route,
+          routeKey,
           routeIndex,
           step,
           tailSteps,
@@ -174,34 +195,33 @@
         const fade = 1 - d.step / (d.tailSteps + 1);
         return Math.max(0.65, cometSize(d.count) * 0.42 * Math.pow(fade, 0.95));
       })
-      .attr('opacity', d => d.step === 0 ? 1 : d.baseOpacity)
-      .each(function(d) {
-        const el = d3.select(this);
-        const start = performance.now() - d.routeIndex * 230;
-        const duration = flowSpeed(d.count) * 1000;
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', curvedArc(
-          { lat: d.sourceLat, lng: d.sourceLng },
-          { lat: d.destinationLat, lng: d.destinationLng }));
-        const length = path.getTotalLength();
+      .attr('opacity', d => d.step === 0 ? 1 : d.baseOpacity);
 
-        d3.timer(now => {
-          const headProgress = ((now - start) / duration) % 1;
-          const progress = headProgress - d.progressOffset;
-          if (progress < 0) {
-            el.attr('opacity', 0);
-            return;
-          }
-          el.attr('opacity', d.baseOpacity);
-          const p = path.getPointAtLength(length * progress);
-          if (d.step === 0) {
-            el.attr('cx', p.x).attr('cy', p.y);
-            return;
-          }
-          const nextProgress = Math.min(headProgress, progress + tailGapScale(d.count) * 0.92);
-          const next = path.getPointAtLength(length * nextProgress);
-          el.attr('x1', p.x).attr('y1', p.y).attr('x2', next.x).attr('y2', next.y);
-        });
+    const cometNodes = flowEnter.merge(flowSel).nodes();
+    cometTimer = d3.timer(now => {
+      for (const node of cometNodes) {
+        const d = node.__data__;
+        const routePath = routePaths.get(d.routeKey);
+        const headProgress = ((now - routePath.start) / routePath.duration) % 1;
+        const progress = headProgress - d.progressOffset;
+        if (progress < 0) {
+          node.setAttribute('opacity', '0');
+          continue;
+        }
+        node.setAttribute('opacity', d.baseOpacity);
+        const p = routePath.path.getPointAtLength(routePath.length * progress);
+        if (d.step === 0) {
+          node.setAttribute('cx', p.x);
+          node.setAttribute('cy', p.y);
+          continue;
+        }
+        const nextProgress = Math.min(headProgress, progress + tailGapScale(d.count) * 0.92);
+        const next = routePath.path.getPointAtLength(routePath.length * nextProgress);
+        node.setAttribute('x1', p.x);
+        node.setAttribute('y1', p.y);
+        node.setAttribute('x2', next.x);
+        node.setAttribute('y2', next.y);
+      }
       });
 
     // Destination bubbles
