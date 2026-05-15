@@ -159,18 +159,26 @@ async function aggregatedResponse(env, days, range, headers) {
         }
       }
       for (const r of (payload.routes || [])) {
-        const key = `${r.sourceCountry}->${r.destinationCountry}`;
+        // Stored payload uses snake_case (matches D1 column names from worker).
+        const sourceCountry = r.sourceCountry ?? r.source_country;
+        const destinationCountry = r.destinationCountry ?? r.destination_country;
+        if (!sourceCountry || !destinationCountry) continue;
+        const sourceLat = r.sourceLat ?? r.source_lat;
+        const sourceLng = r.sourceLng ?? r.source_lng;
+        const destinationLat = r.destinationLat ?? r.destination_lat;
+        const destinationLng = r.destinationLng ?? r.destination_lng;
+        const key = `${sourceCountry}->${destinationCountry}`;
         const cur = routeMap.get(key);
         if (cur) {
           cur.count += r.count || 0;
         } else {
           routeMap.set(key, {
-            sourceCountry: r.sourceCountry,
-            destinationCountry: r.destinationCountry,
-            sourceLat: r.sourceLat,
-            sourceLng: r.sourceLng,
-            destinationLat: r.destinationLat,
-            destinationLng: r.destinationLng,
+            sourceCountry,
+            destinationCountry,
+            sourceLat,
+            sourceLng,
+            destinationLat,
+            destinationLng,
             count: r.count || 0,
           });
         }
