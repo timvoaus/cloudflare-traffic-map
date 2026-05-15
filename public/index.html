@@ -23,6 +23,11 @@
         <span class="badge" id="updated-badge">Loading...</span>
       </div>
       <div class="toolbar-right">
+        <div class="range-switch" role="group" aria-label="Time range">
+          <button type="button" class="range-btn is-active" data-range="24h">24h</button>
+          <button type="button" class="range-btn" data-range="7d">7d</button>
+          <button type="button" class="range-btn" data-range="30d">30d</button>
+        </div>
         <button class="ctrl-btn" id="btn-refresh" title="Refresh">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
         </button>
@@ -97,7 +102,7 @@
         <span class="stat-value" id="stat-routes">0</span>
       </div>
       <div class="stat">
-        <span class="stat-label">Total Queries</span>
+        <span class="stat-label" id="stat-total-label">Total Queries</span>
         <span class="stat-value" id="stat-total">0</span>
       </div>
     </footer>

@@ -137,6 +137,44 @@ body {
   padding: 0.15rem 0.6rem;
 }
 
+.range-switch {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--ctrl-bg);
+}
+.range-btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  min-width: 34px;
+  height: 28px;
+  transition: background 0.15s, color 0.15s;
+}
+.range-btn + .range-btn {
+  border-left: 1px solid var(--glass-border);
+}
+.range-btn:hover {
+  color: var(--text);
+  background: var(--ctrl-bg-hover);
+}
+.range-btn.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+html[data-theme="light"] .range-btn.is-active {
+  background: var(--accent);
+  color: #1a2233;
+}
+
 .ctrl-btn {
   background: var(--ctrl-bg);
   border: 1px solid var(--glass-border);

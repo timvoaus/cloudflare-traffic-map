@@ -456,9 +456,15 @@
     document.getElementById('stat-origins').textContent = formatNumber(sources.length);
     document.getElementById('stat-dests').textContent = formatNumber(destinations.length);
     document.getElementById('stat-routes').textContent = formatNumber(routes.length);
-    // Total queries = sum of sources (each query has exactly one source country).
-    const total = sources.reduce((s, d) => s + (d.count || 0), 0);
+    // Total queries: prefer backend-provided value (authoritative for multi-day ranges).
+    const total = (typeof data.totalQueries === 'number')
+      ? data.totalQueries
+      : sources.reduce((s, d) => s + (d.count || 0), 0);
     document.getElementById('stat-total').textContent = formatNumber(total);
+    const totalLabelEl = document.getElementById('stat-total-label');
+    if (totalLabelEl && data.range) {
+      totalLabelEl.textContent = `Total queries (${data.range})`;
+    }
 
     const fmtShort = iso => {
       try {
@@ -497,11 +503,19 @@
     }
   }
 
+  const RANGE_STORAGE_KEY = 'cf-traffic-map.range';
+  const VALID_RANGES = new Set(['24h', '7d', '30d']);
+  let currentRange = '24h';
+  try {
+    const saved = localStorage.getItem(RANGE_STORAGE_KEY);
+    if (saved && VALID_RANGES.has(saved)) currentRange = saved;
+  } catch (_) {}
+
   async function loadData() {
     loadingEl.hidden = false;
     errorEl.hidden = true;
     try {
-      const res = await fetch('/api/traffic-map');
+      const res = await fetch(`/api/traffic-map?range=${encodeURIComponent(currentRange)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.success === false) throw new Error(data.error || 'API error');
@@ -531,6 +545,26 @@
 
   // Controls
   document.getElementById('btn-refresh').addEventListener('click', loadData);
+
+  // Range switch (24h / 7d / 30d). Daily granularity only.
+  const rangeButtons = Array.from(document.querySelectorAll('.range-btn'));
+  const syncRangeButtons = () => {
+    for (const btn of rangeButtons) {
+      btn.classList.toggle('is-active', btn.dataset.range === currentRange);
+      btn.setAttribute('aria-pressed', btn.dataset.range === currentRange ? 'true' : 'false');
+    }
+  };
+  syncRangeButtons();
+  for (const btn of rangeButtons) {
+    btn.addEventListener('click', () => {
+      const next = btn.dataset.range;
+      if (!VALID_RANGES.has(next) || next === currentRange) return;
+      currentRange = next;
+      try { localStorage.setItem(RANGE_STORAGE_KEY, currentRange); } catch (_) {}
+      syncRangeButtons();
+      loadData();
+    });
+  }
   const legendEl = document.getElementById('route-legend');
   const legendToggleBtn = document.getElementById('legend-toggle');
   const LEGEND_STORAGE_KEY = 'cf-traffic-map.legend-collapsed';
