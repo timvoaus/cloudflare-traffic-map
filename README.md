@@ -278,11 +278,29 @@ Then save the values as Worker secrets:
 2. Maps every ISO country code to a centroid via the embedded
    `centroids.js` lookup (247 codes). Unknown codes are counted and
    reported under `summary.unmappedCountries`.
-3. Clears and rewrites `sources`, `destinations` and `routes` in one
-   chunked D1 batch, then upserts a daily snapshot into
-   `daily_snapshots` and prunes anything older than 30 days.
-4. Records the run summary (including `totalQueries`, window, duration,
-   `unmappedCountries`) in `meta.last_refresh`.
+3. Writes the latest `sources`, `destinations` and `routes` arrays as one
+   bounded `meta.current_snapshot` JSON row, and atomically upserts the daily
+   snapshot, prunes anything older than 30 days, and records the run summary.
+4. The Pages API prefers `meta.current_snapshot` for 24-hour responses and
+   falls back to the legacy aggregate tables while existing deployments roll
+   forward. Successful range responses use a 60-second edge cache.
+
+Normal refreshes update three rows (current snapshot, daily snapshot, and
+summary), plus index/retention work when a new day begins. Each refresh logs
+the actual D1 `rows_read` and `rows_written` returned by its atomic batch.
+The current snapshot is limited to 1.9 MB; an oversized payload or failed
+batch leaves the previously published data intact.
+
+### Validation and rollout
+
+Run `node tests/traffic-map.test.mjs` and `node tests/d1-integration.test.mjs`.
+The integration test uses local Miniflare D1 and verifies all three ranges,
+route field compatibility, and transaction rollback on a failed update.
+
+Deploy Pages first, then the refresh Worker. No schema migration is needed.
+Legacy tables remain available, but stop receiving updates. For rollback,
+restore the old Worker and wait for a successful refresh to repopulate those
+tables before restoring the old Pages deployment. Existing history is retained.
 
 One GraphQL call → one external subrequest per run. Total run is well
 under Workers' free-plan 50-subrequest cap regardless of traffic volume

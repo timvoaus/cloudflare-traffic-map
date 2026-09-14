@@ -198,58 +198,20 @@ function aggregate(raw) {
 }
 
 // ─────────────────────── D1 writes ───────────────────────
-async function runInChunks(env, stmts, chunk = 100) {
-  for (let i = 0; i < stmts.length; i += chunk) {
-    await env.DB.batch(stmts.slice(i, i + chunk));
-  }
-}
+const MAX_SNAPSHOT_BYTES = 1_900_000;
 
-async function writeAggregate(env, agg) {
-  const stmts = [
-    env.DB.prepare('DELETE FROM sources'),
-    env.DB.prepare('DELETE FROM destinations'),
-    env.DB.prepare('DELETE FROM routes'),
-  ];
-  const insSrc = env.DB.prepare('INSERT INTO sources (country, lat, lng, count) VALUES (?, ?, ?, ?)');
-  for (const s of agg.sources) stmts.push(insSrc.bind(s.country, s.lat, s.lng, s.count));
-
-  const insDst = env.DB.prepare('INSERT INTO destinations (country, lat, lng, count) VALUES (?, ?, ?, ?)');
-  for (const d of agg.destinations) stmts.push(insDst.bind(d.country, d.lat, d.lng, d.count));
-
-  const insRoute = env.DB.prepare(
-    `INSERT INTO routes
-       (source_country, destination_country, source_lat, source_lng,
-        destination_lat, destination_lng, count)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  );
-  for (const r of agg.routes) {
-    stmts.push(insRoute.bind(
-      r.source_country, r.destination_country,
-      r.source_lat, r.source_lng,
-      r.destination_lat, r.destination_lng,
-      r.count,
-    ));
-  }
-  await runInChunks(env, stmts);
-}
-
-async function updateMeta(env, payload) {
-  await env.DB.prepare(
-    `INSERT INTO meta (key, value) VALUES ('last_refresh', ?)
+function upsertMeta(key, value, env) {
+  return env.DB.prepare(
+    `INSERT INTO meta (key, value) VALUES (?, ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-  ).bind(JSON.stringify(payload)).run();
+  ).bind(key, value);
 }
 
 // Persist today's snapshot (UTC day) and prune anything older than 30 days.
-async function upsertDailySnapshot(env, agg, totalQueries) {
-  const now = new Date();
+function dailySnapshotStatements(env, agg, totalQueries, now = new Date()) {
   const day = now.toISOString().slice(0, 10); // YYYY-MM-DD UTC
-  const payload = JSON.stringify({
-    sources: agg.sources,
-    destinations: agg.destinations,
-    routes: agg.routes,
-  });
-  await env.DB.batch([
+  const payload = JSON.stringify({ sources: agg.sources, destinations: agg.destinations, routes: agg.routes });
+  return [
     env.DB.prepare(
       `INSERT INTO daily_snapshots
          (day, total_queries, source_count, destination_count, route_count, payload, updated_at)
@@ -268,13 +230,13 @@ async function upsertDailySnapshot(env, agg, totalQueries) {
       agg.destinations.length,
       agg.routes.length,
       payload,
-      Math.floor(Date.now() / 1000),
+      Math.floor(now.getTime() / 1000),
     ),
     // Keep only the last 30 days.
     env.DB.prepare(
       `DELETE FROM daily_snapshots WHERE day < date('now', '-30 days')`,
     ),
-  ]);
+  ];
 }
 
 // ─────────────────────── Orchestrator ───────────────────────
@@ -282,9 +244,6 @@ async function refreshAll(env) {
   const start = Date.now();
   const raw = await fetchTrafficFromGraphQL(env);
   const agg = aggregate(raw);
-  await writeAggregate(env, agg);
-  await upsertDailySnapshot(env, agg, raw.total);
-
   const summary = {
     totalQueries: raw.total,
     sources: agg.sources.length,
@@ -295,11 +254,31 @@ async function refreshAll(env) {
     durationMs: Date.now() - start,
     updatedAt: new Date().toISOString(),
   };
+  const snapshot = JSON.stringify({
+    sources: agg.sources,
+    destinations: agg.destinations,
+    routes: agg.routes,
+    lastRefresh: summary,
+  });
+  const snapshotBytes = new TextEncoder().encode(snapshot).byteLength;
+  if (snapshotBytes >= MAX_SNAPSHOT_BYTES) {
+    throw new Error(`current_snapshot exceeds ${MAX_SNAPSHOT_BYTES} bytes (${snapshotBytes})`);
+  }
   if (agg.unmapped.length > 0) {
     console.warn('Unmapped country codes (add to centroids.js):',
       agg.unmapped.map(u => `${u.country}×${u.hits}`).join(', '));
   }
-  await updateMeta(env, summary);
+  const results = await env.DB.batch([
+    upsertMeta('current_snapshot', snapshot, env),
+    ...dailySnapshotStatements(env, agg, raw.total),
+    upsertMeta('last_refresh', JSON.stringify(summary), env),
+  ]);
+  const usage = results.reduce((totals, result) => {
+    totals.rows_read += result?.meta?.rows_read || 0;
+    totals.rows_written += result?.meta?.rows_written || 0;
+    return totals;
+  }, { rows_read: 0, rows_written: 0 });
+  console.log('refresh D1 usage', usage);
   return summary;
 }
 

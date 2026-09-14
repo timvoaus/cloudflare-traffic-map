@@ -5,7 +5,8 @@
 -- Safe to re-run: every statement uses IF EXISTS / IF NOT EXISTS.
 -- =============================================================
 
--- Latest 24-hour aggregates (overwritten by the refresh Worker every 5 min).
+-- Legacy aggregates retained for rollout/rollback. New refreshes publish
+-- the current map as the current_snapshot JSON value in meta instead.
 CREATE TABLE IF NOT EXISTS sources (
   country TEXT PRIMARY KEY,
   lat REAL NOT NULL,
@@ -31,8 +32,8 @@ CREATE TABLE IF NOT EXISTS routes (
   PRIMARY KEY (source_country, destination_country)
 );
 
--- Run metadata: stores the last_refresh summary JSON so the UI and
--- /status endpoint can report freshness + unmapped-country warnings.
+-- current_snapshot holds the map arrays and their lastRefresh summary.
+-- last_refresh is also stored separately for history and /status.
 CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
